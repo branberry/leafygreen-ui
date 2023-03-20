@@ -1,0 +1,32 @@
+{
+  // Version of the setting file.  Always 0.2
+  "version": "0.2",
+  // language - current active spelling language
+  "language": "en",
+  "allowCompoundWords": true,
+  "dictionaries": [
+    "wordsEn",
+    "softwareTerms",
+    "node",
+    "html",
+    "typescript",
+    "css",
+    "fonts"
+  ],
+  // Approved words that are not included in the default editor
+  "words": [
+    "LeafyGreen",
+    "leafygreen",
+    "tsdoc",
+    "utils",
+    "vercel",
+    "WCAG",
+    "xlarge",
+    "xsmall"
+  ],
+  // Words we always want to flag
+  "flagWords": [
+    "Leafygreen",
+    "leafy-green"
+  ]
+}
