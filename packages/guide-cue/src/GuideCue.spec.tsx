@@ -5,11 +5,13 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { timeout1 } from './styles';
 import { GuideCue } from '.';
+
+const userEvent = userEventSetup.setup();
 
 // TODO: maybe add globally
 async function expectElementToNotBeRemoved(element: HTMLElement) {
@@ -119,7 +121,7 @@ describe('packages/guide-cue', () => {
       });
       const guideCue = getByRole('dialog');
       const button = getByRole('button');
-      userEvent.click(button);
+      await userEvent.click(button);
       await waitForElementToBeRemoved(guideCue);
       expect(guideCue).not.toBeInTheDocument();
     });
@@ -131,7 +133,7 @@ describe('packages/guide-cue', () => {
         onPrimaryButtonClick,
       });
       const button = getByRole('button');
-      userEvent.click(button);
+      await userEvent.click(button);
       await act(async () => {
         await waitFor(() =>
           expect(onPrimaryButtonClick).toHaveBeenCalledTimes(1),
@@ -144,7 +146,7 @@ describe('packages/guide-cue', () => {
         open: true,
       });
       const guideCue = getByRole('dialog');
-      userEvent.click(backdrop);
+      await userEvent.click(backdrop);
       await expectElementToNotBeRemoved(guideCue);
       expect(guideCue).toBeVisible();
     });
@@ -152,7 +154,8 @@ describe('packages/guide-cue', () => {
     test('closes guide-cue when escape key is pressed', async () => {
       const { getByRole } = renderGuideCue({ open: true });
       const guideCue = getByRole('dialog');
-      userEvent.type(guideCue, '{esc}');
+      guideCue.focus();
+      await userEvent.keyboard('{Escape}');
       await waitForElementToBeRemoved(guideCue);
       expect(guideCue).not.toBeInTheDocument();
     });
@@ -318,10 +321,11 @@ describe('packages/guide-cue', () => {
       await act(async () => {
         await waitForTimeout(timeout1);
       });
-      const modal = getByRole('dialog');
-      userEvent.type(modal, '{esc}');
-      await waitForElementToBeRemoved(modal);
-      expect(modal).not.toBeInTheDocument();
+      const guideCue = getByRole('dialog');
+      guideCue.focus();
+      await userEvent.keyboard('{Escape}');
+      await waitForElementToBeRemoved(guideCue);
+      expect(guideCue).not.toBeInTheDocument();
     });
 
     test('content should render in a portal', async () => {

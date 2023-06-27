@@ -1,8 +1,10 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 
 import { Input } from '.';
+
+const userEvent = userEventSetup.setup();
 
 const defaultProps = {
   placeholder: 'This is some placeholder text',
@@ -42,19 +44,19 @@ describe('packages/number-input/input', () => {
       expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
     });
 
-    test('blur triggers onBlur callback', () => {
+    test('blur triggers onBlur callback', async () => {
       const { input } = renderInput({
         ...defaultProps,
       });
 
-      userEvent.tab(); // focus
+      await userEvent.tab(); // focus
       expect(input).toHaveFocus();
-      userEvent.tab(); // blur
+      await userEvent.tab(); // blur
 
       expect(defaultProps.onBlur).toHaveBeenCalledTimes(1);
     });
 
-    test('value changes when "up" arrow is clicked', () => {
+    test('value changes when "up" arrow is clicked', async () => {
       const { container, input } = renderInput({
         ...defaultProps,
       });
@@ -63,11 +65,11 @@ describe('packages/number-input/input', () => {
         'button[aria-label="increment number"]',
       );
 
-      userEvent.click(upArrow as HTMLButtonElement);
+      await userEvent.click(upArrow as HTMLButtonElement);
       expect((input as HTMLInputElement).value).toBe('1');
     });
 
-    test('value changes when "down" arrow is clicked', () => {
+    test('value changes when "down" arrow is clicked', async () => {
       const { container, input } = renderInput({
         ...defaultProps,
       });
@@ -76,7 +78,7 @@ describe('packages/number-input/input', () => {
         'button[aria-label="decrement number"]',
       );
 
-      userEvent.click(upArrow as HTMLButtonElement);
+      await userEvent.click(upArrow as HTMLButtonElement);
       expect((input as HTMLInputElement).value).toBe('-1');
     });
 

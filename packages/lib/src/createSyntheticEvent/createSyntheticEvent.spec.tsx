@@ -1,7 +1,9 @@
 import React, { ChangeEvent, useRef } from 'react';
 import { render } from '@testing-library/react';
 import { createSyntheticEvent, HTMLElementProps } from '..';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
+
+const userEvent = userEventSetup.setup();
 
 const MyInputComponent = ({ onChange }: HTMLElementProps<'input'>) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,13 +23,13 @@ const MyInputComponent = ({ onChange }: HTMLElementProps<'input'>) => {
 };
 
 describe('packages/lib/createSyntheticEvent', () => {
-  test('Creates a SyntheticEvent', () => {
+  test('Creates a SyntheticEvent', async () => {
     const changeHandler = jest.fn();
     const { getByTestId } = render(
       <MyInputComponent onChange={changeHandler} />,
     );
     const buttonEl = getByTestId('button');
-    userEvent.click(buttonEl);
+    await userEvent.click(buttonEl);
     expect(changeHandler).toHaveBeenCalled();
   });
 });

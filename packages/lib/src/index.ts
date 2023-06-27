@@ -145,6 +145,21 @@ export const keyMap = {
   Tab: 9,
 } as const;
 
+/** Object mapping codes to keys */
+export const keyCode = {
+  ArrowUp: 'ArrowUp',
+  ArrowDown: 'ArrowDown',
+  ArrowLeft: 'ArrowLeft',
+  ArrowRight: 'ArrowRight',
+  Backspace: 'Backspace',
+  BracketLeft: 'BracketLeft',
+  Delete: 'Delete',
+  Enter: 'Enter',
+  Escape: 'Escape',
+  Space: 'Space',
+  Tab: 'Tab',
+} as const;
+
 /**
  * An enum of accepted values for the "aria-current" attribute, used for
  * indicating current/active state across several contexts.

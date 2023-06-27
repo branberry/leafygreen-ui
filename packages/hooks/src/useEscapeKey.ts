@@ -1,9 +1,9 @@
 import useEventListener, { UseEventOptions } from './useEventListener';
 
-const escapeKeyCode = 27;
+const escapeKeyCode = 'Escape';
 
 const handleEscape = (e: KeyboardEvent, callback: () => void) => {
-  if (e.keyCode === escapeKeyCode) {
+  if (e.code === escapeKeyCode) {
     e.stopImmediatePropagation();
     callback();
   }

@@ -1,9 +1,11 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { PasswordInput } from '.';
+
+const userEvent = userEventSetup.setup();
 
 const defaultProps = {
   className: 'password-input-class',
@@ -124,58 +126,55 @@ describe('packages/password-input', () => {
       );
     });
 
-    test('value change triggers onChange callback', () => {
+    test('value change triggers onChange callback', async () => {
       const { passwordInput } = renderPasswordInput({
         label: defaultProps.label,
         onChange: defaultProps.onChange,
       });
 
       expect((passwordInput as HTMLInputElement).value).toBe('');
-
-      fireEvent.change(passwordInput, {
-        target: { value: 'a' },
-      });
+      await userEvent.type(passwordInput, 'a');
 
       expect((passwordInput as HTMLInputElement).value).toBe('a');
       expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
     });
 
-    test('blur triggers onBlur callback', () => {
+    test('blur triggers onBlur callback', async () => {
       const { passwordInput } = renderPasswordInput({
         label: defaultProps.label,
         onBlur: defaultProps.onBlur,
       });
 
-      userEvent.tab(); // focus
+      await userEvent.tab(); // focus
       expect(passwordInput).toHaveFocus();
-      userEvent.tab(); // blur
+      await userEvent.tab(); // blur
 
       expect(defaultProps.onBlur).toHaveBeenCalledTimes(1);
     });
 
     describe('toggle', () => {
-      test('toggles password type on click of toggle icon ', () => {
+      test('toggles password type on click of toggle icon ', async () => {
         const { passwordInput, toggleButton } = renderPasswordInput({
           label: defaultProps.label,
         });
 
         expect(passwordInput.getAttribute('type')).toBe('password');
-        fireEvent.click(toggleButton as HTMLButtonElement);
+        await userEvent.click(toggleButton as HTMLButtonElement);
         expect(passwordInput.getAttribute('type')).toBe('text');
-        fireEvent.click(toggleButton as HTMLButtonElement);
+        await userEvent.click(toggleButton as HTMLButtonElement);
         expect(passwordInput.getAttribute('type')).toBe('password');
       });
 
-      test('toggles password type on click of toggle icon when input is disabled', () => {
+      test('toggles password type on click of toggle icon when input is disabled', async () => {
         const { passwordInput, toggleButton } = renderPasswordInput({
           label: defaultProps.label,
           disabled: true,
         });
 
         expect(passwordInput.getAttribute('type')).toBe('password');
-        fireEvent.click(toggleButton as HTMLButtonElement);
+        await userEvent.click(toggleButton as HTMLButtonElement);
         expect(passwordInput.getAttribute('type')).toBe('text');
-        fireEvent.click(toggleButton as HTMLButtonElement);
+        await userEvent.click(toggleButton as HTMLButtonElement);
         expect(passwordInput.getAttribute('type')).toBe('password');
       });
 

@@ -1,8 +1,10 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 
 import { MenuItem } from '.';
+
+const userEvent = userEventSetup.setup();
 
 describe('packages/menu/menu-item', () => {
   describe('it returns the correct type of component', () => {
@@ -35,14 +37,14 @@ describe('packages/menu/menu-item', () => {
       expect(menuItem.tagName.toLowerCase()).toBe('div');
     });
 
-    test('fires onClick callback when clicked', () => {
+    test('fires onClick callback when clicked', async () => {
       const clickHandler = jest.fn();
 
       const { getByTestId } = render(
         <MenuItem data-testid="menu-item" onClick={clickHandler} />,
       );
       const menuItem = getByTestId('menu-item');
-      userEvent.click(menuItem);
+      await userEvent.click(menuItem);
       expect(clickHandler).toHaveBeenCalledTimes(1);
     });
 

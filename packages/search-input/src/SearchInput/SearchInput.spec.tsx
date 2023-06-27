@@ -5,13 +5,15 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/dom';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { renderSearchInput } from '../utils/SearchInput.testutils';
 import { SearchInput, SearchResult } from '..';
 
 import { State } from './SearchInput.types';
+
+const userEvent = userEventSetup.setup();
 
 const resultClickHandler = jest.fn();
 
@@ -66,9 +68,10 @@ describe('packages/search-input', () => {
       expect(queryByRole('button')).not.toBeInTheDocument();
     });
 
-    test('clear button is rendered when there is text', () => {
+    test('clear button is rendered when there is text', async () => {
       const { queryByRole, inputEl } = renderSearchInput();
-      userEvent.type(inputEl, 'abc');
+      inputEl.focus();
+      await userEvent.keyboard('abc');
       expect(queryByRole('button')).toBeInTheDocument();
     });
   });
@@ -115,25 +118,25 @@ describe('packages/search-input', () => {
     });
 
     describe('When disabled', () => {
-      test('searchbox is focusable when `disabled`', () => {
+      test('searchbox is focusable when `disabled`', async () => {
         const { inputEl } = renderSearchInput({
           disabled: true,
           ...defaultProps,
         });
-        userEvent.tab();
+        await userEvent.tab();
         expect(inputEl).toHaveFocus();
       });
 
-      test('searchbox is NOT clickable when `disabled`', () => {
+      test('searchbox is NOT clickable when `disabled`', async () => {
         const { searchBoxEl } = renderSearchInput({
           disabled: true,
           ...defaultProps,
         });
-        userEvent.click(searchBoxEl);
+        await userEvent.click(searchBoxEl);
         expect(document.body).toHaveFocus();
       });
 
-      test('clear button is not clickable', () => {
+      test('clear button is not clickable', async () => {
         const changeHandler = jest.fn();
         const { inputEl, queryByRole } = renderSearchInput({
           ...defaultProps,
@@ -142,90 +145,95 @@ describe('packages/search-input', () => {
           onChange: changeHandler,
         });
 
-        userEvent.click(queryByRole('button')!);
+        await userEvent.click(queryByRole('button')!);
         expect(inputEl).toHaveValue('abc');
         expect(changeHandler).not.toHaveBeenCalled();
       });
 
-      test('clear button does not focus on {tab}', () => {
+      test('clear button does not focus on {tab}', async () => {
         const { queryByRole } = renderSearchInput({
           ...defaultProps,
           disabled: true,
           value: 'abc',
         });
         const button = queryByRole('button');
-        userEvent.tab(); // could focus on input (but shouldn't)
+        await userEvent.tab(); // could focus on input (but shouldn't)
         expect(button).not.toHaveFocus();
-        userEvent.tab(); // check again in case input got focused
+        await userEvent.tab(); // check again in case input got focused
         expect(button).not.toHaveFocus();
       });
     });
 
     describe('Any character key', () => {
-      test('updates the input', () => {
+      test('updates the input', async () => {
         const changeHandler = jest.fn();
         const { inputEl } = renderSearchInput({
           onChange: changeHandler,
         });
         expect(inputEl.value).toBe('');
-        userEvent.type(inputEl, 'a');
+        inputEl.focus();
+        await userEvent.keyboard('a');
         expect(inputEl.value).toBe('a');
         expect(changeHandler).toHaveBeenCalledTimes(1);
       });
-      test("opens the menu if it's closed", () => {
+      test("opens the menu if it's closed", async () => {
         const { getMenuElements, inputEl } = renderSearchInput({
           ...defaultProps,
         });
 
-        userEvent.type(inputEl, 'abc');
+        inputEl.focus();
+        await userEvent.keyboard('abc');
         const { menuContainerEl } = getMenuElements();
         expect(menuContainerEl).toBeInTheDocument();
       });
     });
 
     describe('Enter key', () => {
-      test('keydown event is called', () => {
+      test('keydown event is called', async () => {
         const keyDownHandler = jest.fn();
         const { inputEl } = renderSearchInput({
           onKeyDown: keyDownHandler,
         });
-        userEvent.type(inputEl, '{enter}');
+        inputEl.focus();
+        await userEvent.keyboard('[Enter]');
         expect(keyDownHandler).toHaveBeenCalledTimes(1);
       });
 
       // https://jira.mongodb.org/browse/LG-3195
       // https://github.com/silx-kit/h5web/pull/814
-      // This can be done after testing-library's version is bumped to at least 13.5.0
+      // TODO: This can be done after testing-library's version is bumped to at least 13.5.0
       test.todo('test multiple keys being pressed at once');
     });
 
     describe('Clear button', () => {
-      test('clears any input', () => {
+      test('clears any input', async () => {
         const { queryByRole, inputEl } = renderSearchInput({
           ...defaultProps,
         });
-        userEvent.type(inputEl, 'abc');
-        userEvent.click(queryByRole('button')!);
+        inputEl.focus();
+        await userEvent.keyboard('abc');
+        await userEvent.click(queryByRole('button')!);
         expect(inputEl).toHaveValue('');
       });
 
-      test('fires `onChange`', () => {
+      test('fires `onChange`', async () => {
         const changeHandler = jest.fn();
         const { queryByRole, inputEl } = renderSearchInput({
           ...defaultProps,
           onChange: changeHandler,
         });
-        userEvent.type(inputEl, 'abc');
-        userEvent.click(queryByRole('button')!);
+        inputEl.focus();
+        await userEvent.keyboard('abc');
+        await userEvent.click(queryByRole('button')!);
         expect(changeHandler).toHaveBeenCalled();
       });
 
-      test('focuses input, but does not open the menu', () => {
+      test('focuses input, but does not open the menu', async () => {
         const { queryByRole, inputEl, getMenuElements } = renderSearchInput({
           ...defaultProps,
           value: 'abc',
         });
-        userEvent.click(queryByRole('button')!);
+        await userEvent.click(queryByRole('button')!);
         const { menuContainerEl } = getMenuElements();
         expect(inputEl).toHaveFocus();
         expect(menuContainerEl).not.toBeInTheDocument();
@@ -233,32 +241,32 @@ describe('packages/search-input', () => {
     });
 
     describe('Mouse interaction', () => {
-      test('clicking the input sets focus to the input', () => {
+      test('clicking the input sets focus to the input', async () => {
         const { inputEl } = renderSearchInput({
           ...defaultProps,
         });
 
-        userEvent.click(inputEl);
+        await userEvent.click(inputEl);
         expect(inputEl).toHaveFocus();
       });
 
-      test('clicking the input opens the menu', () => {
+      test('clicking the input opens the menu', async () => {
         const { getMenuElements, inputEl } = renderSearchInput({
           ...defaultProps,
         });
 
-        userEvent.click(inputEl);
+        await userEvent.click(inputEl);
         const { menuContainerEl } = getMenuElements();
         expect(menuContainerEl).not.toBeNull();
         expect(menuContainerEl).toBeInTheDocument();
       });
 
-      test('clicking anywhere on the searchBox opens the menu & sets focus', () => {
+      test('clicking anywhere on the searchBox opens the menu & sets focus', async () => {
         const { getMenuElements, searchBoxEl, inputEl } = renderSearchInput({
           ...defaultProps,
         });
 
-        userEvent.click(searchBoxEl);
+        await userEvent.click(searchBoxEl);
         const { menuContainerEl } = getMenuElements();
         expect(menuContainerEl).not.toBeNull();
         expect(menuContainerEl).toBeInTheDocument();
@@ -272,20 +280,20 @@ describe('packages/search-input', () => {
             children: undefined,
           });
 
-          userEvent.click(inputEl);
-          userEvent.click(containerEl.parentElement!);
+          await userEvent.click(inputEl);
+          await userEvent.click(containerEl.parentElement!);
 
           await waitFor(() => {
             expect(inputEl).not.toHaveFocus();
           });
         });
 
-        test('With menu: click-away keeps focus on the input', () => {
+        test('With menu: click-away keeps focus on the input', async () => {
           const { containerEl, inputEl } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.click(inputEl);
-          userEvent.click(containerEl.parentElement!);
+          await userEvent.click(inputEl);
+          await userEvent.click(containerEl.parentElement!);
           expect(inputEl).toHaveFocus();
         });
 
@@ -294,7 +302,7 @@ describe('packages/search-input', () => {
             ...defaultProps,
           });
           const { menuContainerEl } = openMenu();
-          userEvent.click(containerEl.parentElement!);
+          await userEvent.click(containerEl.parentElement!);
           await waitForElementToBeRemoved(menuContainerEl);
           expect(menuContainerEl).not.toBeInTheDocument();
         });
@@ -303,24 +311,24 @@ describe('packages/search-input', () => {
           const { openMenu, containerEl, inputEl } = renderSearchInput({
             ...defaultProps,
           });
-
-          userEvent.type(inputEl, 'abc');
+          inputEl.focus();
+          await userEvent.keyboard('abc');
           const { menuContainerEl } = openMenu();
-          userEvent.click(containerEl.parentElement!);
+          await userEvent.click(containerEl.parentElement!);
           await waitForElementToBeRemoved(menuContainerEl);
           expect(inputEl).toHaveValue('abc');
         });
       });
 
       describe('clicking a result', () => {
-        test('fires its onClick handler', () => {
+        test('fires its onClick handler', async () => {
           const { getMenuElements, inputEl } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.click(inputEl);
+          await userEvent.click(inputEl);
           const { resultsElements } = getMenuElements();
 
-          userEvent.click(resultsElements![0]);
+          await userEvent.click(resultsElements![0]);
           expect(resultClickHandler).toHaveBeenCalledWith(
             expect.objectContaining({
               type: 'click',
@@ -328,17 +336,17 @@ describe('packages/search-input', () => {
           );
         });
 
-        test('fires the onSubmit handler', () => {
+        test('fires the onSubmit handler', async () => {
           const submitHandler = jest.fn();
 
           const { getMenuElements, inputEl, containerEl } = renderSearchInput({
             ...defaultProps,
             onSubmit: submitHandler,
           });
-          userEvent.click(inputEl);
+          await userEvent.click(inputEl);
           const { resultsElements } = getMenuElements();
 
-          userEvent.click(resultsElements![0]);
+          await userEvent.click(resultsElements![0]);
           expect(submitHandler).toHaveBeenCalledWith(
             expect.objectContaining({
               type: 'submit',
@@ -348,15 +356,15 @@ describe('packages/search-input', () => {
           expect(submitEvent.target).toBe(containerEl);
         });
 
-        test('fires the change handler', () => {
+        test('fires the change handler', async () => {
           const changeHandler = jest.fn();
           const { getMenuElements, inputEl } = renderSearchInput({
             ...defaultProps,
             onChange: changeHandler,
           });
-          userEvent.click(inputEl);
+          await userEvent.click(inputEl);
           const { resultsElements } = getMenuElements();
-          userEvent.click(resultsElements![0]);
+          await userEvent.click(resultsElements![0]);
           expect(changeHandler).toHaveBeenCalledWith(
             expect.objectContaining({
               type: 'change',
@@ -364,14 +372,14 @@ describe('packages/search-input', () => {
           );
         });
 
-        test('does not populate the input with the result text', () => {
+        test('does not populate the input with the result text', async () => {
           // https://mongodb.slack.com/archives/G01500NFVPS/p1676059715272479
           const { getMenuElements, inputEl } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.click(inputEl);
+          await userEvent.click(inputEl);
           const { resultsElements } = getMenuElements();
-          userEvent.click(resultsElements![0]);
+          await userEvent.click(resultsElements![0]);
           expect(inputEl.value).toBe('');
         });
       });
@@ -386,43 +394,44 @@ describe('packages/search-input', () => {
       });
 
       describe('Tab key', () => {
-        test('tab focuses the input', () => {
+        test('tab focuses the input', async () => {
           const { inputEl } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.tab();
+          await userEvent.tab();
           expect(inputEl).toHaveFocus();
         });
 
-        test('menu does NOT open on first focus', () => {
+        test('menu does NOT open on first focus', async () => {
           const { getMenuElements } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.tab();
+          await userEvent.tab();
           const { menuContainerEl } = getMenuElements();
           expect(menuContainerEl).not.toBeInTheDocument();
         });
 
-        test('focuses clear button', () => {
+        test('focuses clear button', async () => {
           const { inputEl, queryByRole } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.type(inputEl, 'abc');
+          inputEl.focus();
+          await userEvent.keyboard('abc');
           userEvent.tab();
           expect(queryByRole('button')).toHaveFocus();
         });
 
-        test('moves focus off input if there is no input value', () => {
+        test('moves focus off input if there is no input value', async () => {
           const { inputEl } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.tab();
+          await userEvent.tab();
           expect(inputEl).toHaveFocus();
-          userEvent.tab();
+          await userEvent.tab();
           expect(inputEl).not.toHaveFocus();
         });
 
-        // Can't get jest to verify the menu closes. Can verify in browser
+        // TODO: Can't get jest to verify the menu closes. Can verify in browser
         // eslint-disable-next-line jest/no-disabled-tests
         test.skip('Closes menu when tabbing away', async () => {
           const { getMenuElements, inputEl } = renderSearchInput({
@@ -444,44 +453,48 @@ describe('packages/search-input', () => {
             ...defaultProps,
           });
           const { menuContainerEl } = openMenu();
-          userEvent.type(inputEl, '{esc}');
+          inputEl.focus();
+          await userEvent.keyboard('[Escape]');
           await waitForElementToBeRemoved(menuContainerEl);
           expect(menuContainerEl).not.toBeInTheDocument();
         });
-        test('returns focus to the input', () => {
+        test('returns focus to the input', async () => {
           const { containerEl, openMenu, inputEl } = renderSearchInput({
             ...defaultProps,
           });
           openMenu();
-          userEvent.type(containerEl, '{esc}');
+          containerEl.focus();
+          await userEvent.keyboard('[Escape]');
           expect(inputEl).toHaveFocus();
         });
       });
 
-      test('space key types a space character', () => {
+      test('space key types a space character', async () => {
         const { inputEl } = renderSearchInput({
           ...defaultProps,
         });
-        userEvent.type(inputEl, ' ');
+        inputEl.focus();
+        await userEvent.keyboard('[Space]');
         expect(inputEl).toHaveValue(' ');
       });
 
       describe('Arrow keys', () => {
-        test('down arrow opens menu', () => {
+        test('down arrow opens menu', async () => {
           const { inputEl, getMenuElements } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.type(inputEl, '{arrowdown}');
+          inputEl.focus();
+          await userEvent.keyboard('[ArrowDown]');
           const { menuContainerEl } = getMenuElements();
           expect(menuContainerEl).toBeInTheDocument();
         });
 
-        test('down arrow moves highlight down', () => {
-          const { openMenu, inputEl, getByRole } = renderSearchInput({
+        test('down arrow moves highlight down', async () => {
+          const { openMenu, getByRole } = renderSearchInput({
             ...defaultProps,
           });
           openMenu();
-          userEvent.type(inputEl, '{arrowdown}');
+          await userEvent.keyboard('[ArrowDown]');
           const highlight = getByRole('option', {
             selected: true,
           });
@@ -489,12 +502,15 @@ describe('packages/search-input', () => {
           expect(highlight).toHaveTextContent('Banana');
         });
 
-        test('up arrow moves highlight up', () => {
-          const { openMenu, inputEl, getByRole } = renderSearchInput({
+        test('up arrow moves highlight up', async () => {
+          const { openMenu, getByRole } = renderSearchInput({
             ...defaultProps,
           });
           openMenu();
-          userEvent.type(inputEl, '{arrowdown}{arrowdown}{arrowup}');
+          // getMenuElements().resultsElements[0].focus();
+          // // inputEl.focus();
+          await userEvent.keyboard('[ArrowDown][ArrowDown][ArrowUp]');
+          // userEvent.type(inputEl, '{arrowdown}{arrowdown}{arrowup}');
           const highlight = getByRole('option', {
             selected: true,
           });
@@ -502,12 +518,12 @@ describe('packages/search-input', () => {
           expect(highlight).toHaveTextContent('Banana');
         });
 
-        test('up arrow cycles highlight to bottom', () => {
-          const { openMenu, inputEl, getByRole } = renderSearchInput({
+        test('up arrow cycles highlight to bottom', async () => {
+          const { openMenu, getByRole } = renderSearchInput({
             ...defaultProps,
           });
           openMenu();
-          userEvent.type(inputEl, '{arrowup}');
+          await userEvent.keyboard('[ArrowUp]');
           const highlight = getByRole('option', {
             selected: true,
           });
@@ -515,12 +531,12 @@ describe('packages/search-input', () => {
           expect(highlight).toHaveTextContent('Dragonfruit');
         });
 
-        test('down arrow cycles highlight to top', () => {
-          const { openMenu, inputEl, getByRole } = renderSearchInput({
+        test('down arrow cycles highlight to top', async () => {
+          const { openMenu, getByRole } = renderSearchInput({
             ...defaultProps,
           });
           openMenu();
-          userEvent.type(inputEl, '{arrowup}{arrowdown}');
+          await userEvent.keyboard('[ArrowUp][ArrowDown]');
           const highlight = getByRole('option', {
             selected: true,
           });
@@ -528,11 +544,12 @@ describe('packages/search-input', () => {
           expect(highlight).toHaveTextContent('Apple');
         });
 
-        test('down arrow key opens menu when its closed', () => {
+        test('down arrow key opens menu when its closed', async () => {
           const { inputEl, getMenuElements } = renderSearchInput({
             ...defaultProps,
           });
-          userEvent.type(inputEl, '{arrowdown}');
+          inputEl.focus();
+          await userEvent.keyboard('[ArrowDown]');
           const { menuContainerEl } = getMenuElements();
           expect(menuContainerEl).toBeInTheDocument();
         });
@@ -558,14 +575,15 @@ describe('packages/search-input', () => {
           expect(submitEvent.defaultPrevented).toBeTruthy();
         });
 
-        test('fires onSubmit without typeahead', () => {
+        test('fires onSubmit without typeahead', async () => {
           const submitHandler = jest.fn();
           const { inputEl, containerEl } = renderSearchInput({
             ...defaultProps,
             children: undefined,
             onSubmit: submitHandler,
           });
-          userEvent.type(inputEl, 'abc{enter}');
+          inputEl.focus();
+          await userEvent.keyboard('abc[Enter]');
 
           expect(submitHandler).toHaveBeenCalledWith(
             expect.objectContaining({

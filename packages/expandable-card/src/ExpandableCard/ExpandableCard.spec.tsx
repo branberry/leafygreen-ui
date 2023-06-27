@@ -5,6 +5,8 @@ import { axe } from 'jest-axe';
 
 import ExpandableCard from './ExpandableCard';
 
+const user = userEvent.setup();
+
 const renderCard = () =>
   render(
     <ExpandableCard title="Card title" description="Card description">
@@ -30,10 +32,10 @@ describe('packages/expandable-card', () => {
       ).not.toBeVisible();
     });
 
-    test('content is visible after click', () => {
+    test('content is visible after click', async () => {
       const { container } = renderCard();
       const trigger = getByText(container, 'Card title');
-      userEvent.click(trigger);
+      await user.click(trigger);
       expect(getByText(container, 'Lorem ipsum dolor sit amet')).toBeVisible();
     });
   });

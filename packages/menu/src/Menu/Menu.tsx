@@ -16,7 +16,7 @@ import {
   useForceRerender,
 } from '@leafygreen-ui/hooks';
 import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
-import { isComponentType, keyMap, Theme } from '@leafygreen-ui/lib';
+import { isComponentType, keyCode, Theme } from '@leafygreen-ui/lib';
 import { palette } from '@leafygreen-ui/palette';
 import Popover, { Align, Justify } from '@leafygreen-ui/popover';
 
@@ -208,13 +208,13 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
               updateCurrentSubMenu();
             },
             onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => {
-              if (e.keyCode === keyMap.ArrowLeft && isCurrentSubMenu) {
+              if (e.code === keyCode.ArrowLeft && isCurrentSubMenu) {
                 currentSubMenuRef.current = null;
                 hasSetInitialOpen.current = true;
                 updateCurrentSubMenu();
               }
 
-              if (e.keyCode === keyMap.ArrowRight) {
+              if (e.code === keyCode.ArrowRight) {
                 currentSubMenuRef.current = child;
                 hasSetInitialOpen.current = true;
                 updateCurrentSubMenu();
@@ -288,8 +288,8 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
   function handleKeyDown(e: KeyboardEvent) {
     let refToFocus: HTMLElement;
 
-    switch (e.keyCode) {
-      case keyMap.ArrowDown:
+    switch (e.code) {
+      case keyCode.ArrowDown:
         e.preventDefault(); // Prevents page scrolling
         refToFocus =
           refs[(refs.indexOf(focusedRef.current!) + 1) % refs.length];
@@ -297,7 +297,7 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
         setFocus(refToFocus);
         break;
 
-      case keyMap.ArrowUp:
+      case keyCode.ArrowUp:
         e.preventDefault(); // Prevents page scrolling
         refToFocus =
           refs[
@@ -306,19 +306,19 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
         setFocus(refToFocus);
         break;
 
-      case keyMap.Tab:
+      case keyCode.Tab:
         e.preventDefault(); // Prevent tabbing outside of portal and outside of the DOM when `usePortal={true}`
         handleClose();
         setFocus((refEl || triggerRef)?.current); // Focus the trigger on close
         break;
 
-      case keyMap.Escape:
+      case keyCode.Escape:
         handleClose();
         setFocus((refEl || triggerRef)?.current); // Focus the trigger on close
         break;
 
-      case keyMap.Space:
-      case keyMap.Enter:
+      case keyCode.Space:
+      case keyCode.Enter:
         if (!open) {
           setFocus(refs[0]);
         }

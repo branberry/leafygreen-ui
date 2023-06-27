@@ -234,12 +234,14 @@ describe('packages/split-button', () => {
         expect(onClick).toHaveBeenCalled();
       });
 
-      /* eslint-disable jest/no-disabled-tests */
-      test.skip('Closes the menu', async () => {
+      test('Closes the menu', async () => {
         // Works correctly in the browser
         // https://github.com/testing-library/react-testing-library/issues/269#issuecomment-1453666401 - this needs v13 of testing-library
         // TODO: This is not triggered so the test fails
-        userEvent.type(options[0], `{${key}}`);
+        // userEvent.type(options[0], `{${key}}`);
+
+        options[0].focus();
+        userEvent.keyboard('{enter}');
         expect(menuTrigger).toHaveFocus();
 
         await waitForElementToBeRemoved(menu);

@@ -119,7 +119,7 @@
     "@svgr/webpack": "^8.0.1",
     "@tanstack/react-table": "^8.7.3",
     "@testing-library/jest-dom": "^5.4.0",
-    "@testing-library/user-event": "^12.1.8",
+    "@testing-library/user-event": "^14.0.0",
     "@types/facepaint": "^1.2.1",
     "@types/highlight.js": "^10.1.0",
     "@types/jest": "^29.0.0",
@@ -187,8 +187,7 @@
     "url-loader": "4.1.0"
   },
   "resolutions": {
-    "caniuse-lite": "^1.0.30001135",
-    "@types/react": "^16.9.56"
+    "caniuse-lite": "^1.0.30001135"
   },
   "config": {
     "commitizen": {

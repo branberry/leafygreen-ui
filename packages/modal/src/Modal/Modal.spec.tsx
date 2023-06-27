@@ -4,12 +4,14 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { Option, OptionGroup, Select } from '@leafygreen-ui/select';
 
 import ModalView from '..';
+
+const userEvent = userEventSetup.setup();
 
 const modalContent = 'Modal Content';
 
@@ -74,7 +76,7 @@ describe('packages/modal', () => {
       const modal = getByRole('dialog');
       const button = getByRole('button');
 
-      userEvent.click(button);
+      await userEvent.click(button);
 
       await waitForElementToBeRemoved(modal);
       expect(modal).not.toBeInTheDocument();
@@ -84,7 +86,8 @@ describe('packages/modal', () => {
       const { getByRole } = renderModal({ open: true });
 
       const modal = getByRole('dialog');
-      userEvent.type(modal, '{esc}');
+      modal.focus();
+      await userEvent.keyboard('[Escape]');
 
       await waitForElementToBeRemoved(modal);
       expect(modal).not.toBeInTheDocument();
@@ -97,7 +100,8 @@ describe('packages/modal', () => {
       });
 
       const modal = getByRole('dialog');
-      userEvent.type(modal, '{esc}');
+      modal.focus();
+      await userEvent.keyboard('[Escape]');
 
       await expectElementToNotBeRemoved(modal);
 
@@ -111,7 +115,8 @@ describe('packages/modal', () => {
       });
 
       const modal = getByRole('dialog');
-      userEvent.type(modal, '{esc}');
+      modal.focus();
+      await userEvent.keyboard('[Escape]');
 
       await waitForElementToBeRemoved(modal);
       expect(modal).not.toBeInTheDocument();
@@ -123,7 +128,7 @@ describe('packages/modal', () => {
       });
 
       const modal = getByRole('dialog');
-      userEvent.click(modal.parentElement!);
+      await userEvent.click(modal.parentElement!);
 
       await expectElementToNotBeRemoved(modal);
 
@@ -153,7 +158,7 @@ describe('packages/modal', () => {
 
       const modal = getByTestId('modal-test-id');
       const select = getByTestId('modal-select-test-id');
-      userEvent.click(select);
+      await userEvent.click(select);
 
       await waitFor(() => {
         expect(modal).toHaveTextContent('Axolotl');

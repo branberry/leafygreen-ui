@@ -5,10 +5,12 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 
 import { MenuProps } from './Menu';
 import { Menu, MenuItem, MenuSeparator } from '.';
+
+const userEvent = userEventSetup.setup();
 
 const menuTestId = 'menu-test-id';
 const trigger = <button data-testid="menu-trigger">trigger</button>;
@@ -58,14 +60,14 @@ describe('packages/menu', () => {
       });
 
       const button = getByRole('button');
-      userEvent.click(button);
+      await userEvent.click(button);
 
       const menuItem = getByText('Item B');
       await waitFor(() => {
         expect(menuItem).toBeVisible();
       });
 
-      userEvent.click(button);
+      await userEvent.click(button);
 
       await waitForElementToBeRemoved(menuItem);
     });
@@ -76,7 +78,7 @@ describe('packages/menu', () => {
       });
       const button = getByRole('button');
 
-      userEvent.click(button);
+      await userEvent.click(button);
       const menu = getByTestId(menuTestId);
 
       await waitFor(() => {
@@ -84,7 +86,7 @@ describe('packages/menu', () => {
       });
 
       const menuItem = getByTestId('menu-item-a');
-      userEvent.click(menuItem);
+      await userEvent.click(menuItem);
 
       await waitFor(() => {
         expect(menu).not.toBeInTheDocument();
@@ -96,14 +98,14 @@ describe('packages/menu', () => {
         trigger,
       });
       const button = getByRole('button');
-      userEvent.click(button);
+      await userEvent.click(button);
       const menu = getByTestId(menuTestId);
 
       await waitFor(() => {
         expect(menu).toBeInTheDocument();
       });
 
-      userEvent.click(backdrop);
+      await userEvent.click(backdrop);
 
       await waitFor(() => {
         expect(menu).not.toBeInTheDocument();
@@ -133,7 +135,7 @@ describe('packages/menu', () => {
 
       expect(menu).toBeInTheDocument();
 
-      userEvent.click(menuItem);
+      await userEvent.click(menuItem);
 
       await waitForElementToBeRemoved(menu);
       expect(menu).not.toBeInTheDocument();
@@ -150,7 +152,7 @@ describe('packages/menu', () => {
 
       const backdrop = getByTestId('backdrop');
 
-      userEvent.click(backdrop);
+      await userEvent.click(backdrop);
 
       await waitForElementToBeRemoved(menu);
       expect(menu).not.toBeInTheDocument();
@@ -164,7 +166,7 @@ describe('packages/menu', () => {
       });
       const button = getByRole('button');
 
-      userEvent.click(button);
+      await userEvent.click(button);
       const menu = getByTestId(menuTestId);
 
       await waitFor(() => {
@@ -185,7 +187,7 @@ describe('packages/menu', () => {
       );
       const button = getByTestId('menu-trigger');
 
-      userEvent.click(button);
+      await userEvent.click(button);
       const menu = getByTestId(menuTestId);
       await waitFor(() => {
         expect(menu).toBeInTheDocument();
@@ -194,15 +196,17 @@ describe('packages/menu', () => {
     });
   });
 
-  type Keys = 'esc' | 'tab';
-  const closeKeys: Array<Array<Keys>> = [['esc'], ['tab']];
+  type Keys = 'Escape' | 'tab';
+  const closeKeys: Array<Array<Keys>> = [['Escape'], ['tab']];
 
   describe('Keyboard Interaction', () => {
-    const userEventInteraction = (menu: HTMLElement, key: Keys) => {
+    const userEventInteraction = async (menu: HTMLElement, key: Keys) => {
       if (key === 'tab') {
-        userEvent.tab();
+        await userEvent.tab();
       } else {
-        userEvent.type(menu, `{${key}}`);
+        menu.focus();
+        // await userEvent.type(menu, `{${key}}`);
+        await userEvent.keyboard('[Escape]');
       }
     };
 
@@ -212,7 +216,7 @@ describe('packages/menu', () => {
           trigger,
         });
         const button = getByRole('button');
-        userEvent.click(button);
+        await userEvent.click(button);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -225,7 +229,7 @@ describe('packages/menu', () => {
           usePortal: true,
         });
         const button = getByRole('button');
-        userEvent.click(button);
+        await userEvent.click(button);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -239,7 +243,7 @@ describe('packages/menu', () => {
           usePortal: false,
         });
         const button = getByRole('button');
-        userEvent.click(button);
+        await userEvent.click(button);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -252,37 +256,37 @@ describe('packages/menu', () => {
       let menu: HTMLElement;
       let options: Array<HTMLElement>;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         const { getByTestId } = renderMenu({ trigger });
         const triggerButton = getByTestId('menu-trigger');
 
-        userEvent.click(triggerButton);
+        await userEvent.click(triggerButton);
         menu = getByTestId(menuTestId);
         options = globalGetAllByRole(menu, 'menuitem');
       });
 
       describe('Down arrow', () => {
-        test('highlights the next option in the menu', () => {
-          userEvent.type(menu, '{arrowdown}');
+        test('highlights the next option in the menu', async () => {
+          await userEvent.type(menu, '{arrowdown}');
           expect(options[1]).toHaveFocus();
         });
-        test('cycles highlight to the top', () => {
+        test('cycles highlight to the top', async () => {
           // programmatically set focus on last option
           options[options.length - 1].focus();
-          userEvent.type(menu, '{arrowdown}');
+          await userEvent.type(menu, '{arrowdown}');
           expect(options[0]).toHaveFocus();
         });
       });
 
       describe('Up arrow', () => {
-        test('highlights the previous option in the menu', () => {
+        test('highlights the previous option in the menu', async () => {
           // programmatically set focus on second option
           options[1].focus();
-          userEvent.type(menu, '{arrowup}');
+          await userEvent.type(menu, '{arrowup}');
           expect(options[0]).toHaveFocus();
         });
-        test('cycles highlight to the bottom', () => {
-          userEvent.type(menu, '{arrowup}');
+        test('cycles highlight to the bottom', async () => {
+          await userEvent.type(menu, '{arrowup}');
           expect(options[options.length - 1]).toHaveFocus();
         });
       });

@@ -1,10 +1,12 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { Size, State } from './NumberInput.types';
 import { NumberInput } from '.';
+
+const userEvent = userEventSetup.setup();
 
 const label = 'This is the label text';
 const description = 'This is the description text';
@@ -202,20 +204,20 @@ describe('packages/number-input', () => {
       expect((numberInput as HTMLInputElement).value).toBe('111');
     });
 
-    test('blur triggers onBlur callback', () => {
+    test('blur triggers onBlur callback', async () => {
       const { numberInput } = renderNumberInput({
         label,
         ...defaultProps,
       });
 
-      userEvent.tab(); // focus
+      await userEvent.tab(); // focus
       expect(numberInput).toHaveFocus();
-      userEvent.tab(); // blur
+      await userEvent.tab(); // blur
 
       expect(defaultProps.onBlur).toHaveBeenCalledTimes(1);
     });
 
-    test('value changes when "up" arrow is clicked', () => {
+    test('value changes when "up" arrow is clicked', async () => {
       const { container, numberInput } = renderNumberInput({
         label,
         ...defaultProps,
@@ -225,11 +227,11 @@ describe('packages/number-input', () => {
         'button[aria-label="increment number"]',
       );
 
-      userEvent.click(upArrow as HTMLButtonElement);
+      await userEvent.click(upArrow as HTMLButtonElement);
       expect((numberInput as HTMLInputElement).value).toBe('1');
     });
 
-    test('value changes when "down" arrow is clicked', () => {
+    test('value changes when "down" arrow is clicked', async () => {
       const { container, numberInput } = renderNumberInput({
         label,
         ...defaultProps,
@@ -239,7 +241,7 @@ describe('packages/number-input', () => {
         'button[aria-label="decrement number"]',
       );
 
-      userEvent.click(upArrow as HTMLButtonElement);
+      await userEvent.click(upArrow as HTMLButtonElement);
       expect((numberInput as HTMLInputElement).value).toBe('-1');
     });
 
