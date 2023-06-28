@@ -31,7 +31,7 @@ import {
   createSyntheticEvent,
   getNodeTextContent,
   isComponentType,
-  keyMap,
+  keyCode,
 } from '@leafygreen-ui/lib';
 
 import { SearchInputContextProvider } from '../SearchInputContext';
@@ -295,19 +295,19 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       const isFocusInComponent = isFocusOnSearchBox || isFocusInMenu;
 
       if (isFocusInComponent) {
-        switch (e.keyCode) {
-          case keyMap.Enter: {
+        switch (e.code) {
+          case keyCode.Enter: {
             highlightedElementRef?.current?.click();
             break;
           }
 
-          case keyMap.Escape: {
+          case keyCode.Escape: {
             closeMenu();
             inputRef.current?.focus();
             break;
           }
 
-          case keyMap.ArrowDown: {
+          case keyCode.ArrowDown: {
             if (withTypeAhead) {
               inputRef.current?.focus();
               openMenu();
@@ -317,7 +317,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             break;
           }
 
-          case keyMap.ArrowUp: {
+          case keyCode.ArrowUp: {
             if (withTypeAhead) {
               inputRef.current?.focus();
               openMenu();
@@ -327,7 +327,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             break;
           }
 
-          case keyMap.Tab: {
+          case keyCode.Tab: {
             if (isOpen) {
               closeMenu();
             }
