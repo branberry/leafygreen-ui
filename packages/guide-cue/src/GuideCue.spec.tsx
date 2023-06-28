@@ -218,11 +218,13 @@ describe('packages/guide-cue', () => {
         numberOfSteps: 2,
         currentStep: 1,
       });
-      await act(async () => {
+      await waitFor(async () => {
         await waitForTimeout(timeout1);
       });
       const guideCue = getByRole('dialog');
-      await waitFor(() => expect(guideCue).toBeVisible());
+      await waitFor(() => {
+        expect(guideCue).toBeVisible();
+      });
     });
 
     test('closes when the dismiss(X) button is clicked', async () => {
@@ -233,12 +235,14 @@ describe('packages/guide-cue', () => {
         currentStep: 1,
         onDismiss: onClose,
       });
-      await act(async () => {
+      await waitFor(async () => {
         await waitForTimeout(timeout1);
       });
       const guideCue = getByRole('dialog');
+
       const button = getByLabelText('Close Tooltip', { selector: 'button' });
-      userEvent.click(button);
+      await userEvent.click(button);
+
       await waitForElementToBeRemoved(guideCue);
       expect(guideCue).not.toBeInTheDocument();
     });
@@ -251,11 +255,11 @@ describe('packages/guide-cue', () => {
         currentStep: 1,
         onDismiss: onClose,
       });
-      await act(async () => {
+      await waitFor(async () => {
         await waitForTimeout(timeout1);
       });
       const button = getByLabelText('Close Tooltip', { selector: 'button' });
-      userEvent.click(button);
+      await userEvent.click(button);
       await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     });
 
@@ -272,7 +276,7 @@ describe('packages/guide-cue', () => {
       });
       const guideCue = getByRole('dialog');
       const button = getAllByRole('button')[1];
-      userEvent.click(button);
+      await userEvent.click(button);
       await waitForElementToBeRemoved(guideCue);
       expect(guideCue).not.toBeInTheDocument();
     });
@@ -288,8 +292,10 @@ describe('packages/guide-cue', () => {
       await act(async () => {
         await waitForTimeout(timeout1);
       });
+
       const button = getAllByRole('button')[1];
-      userEvent.click(button);
+      await userEvent.click(button);
+
       await waitFor(() =>
         expect(onPrimaryButtonClick).toHaveBeenCalledTimes(1),
       );
@@ -305,7 +311,8 @@ describe('packages/guide-cue', () => {
         await waitForTimeout(timeout1);
       });
       const guideCue = getByRole('dialog');
-      userEvent.click(backdrop);
+      await userEvent.click(backdrop);
+
       await expectElementToNotBeRemoved(guideCue);
       expect(guideCue).toBeVisible();
     });
