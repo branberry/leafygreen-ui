@@ -12,7 +12,7 @@ import { cx } from '@leafygreen-ui/emotion';
 import { useBackdropClick, useEventListener } from '@leafygreen-ui/hooks';
 import Icon from '@leafygreen-ui/icon';
 import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
-import { isComponentType, keyMap } from '@leafygreen-ui/lib';
+import { isComponentType, keyCode } from '@leafygreen-ui/lib';
 import { Menu as LGMenu } from '@leafygreen-ui/menu';
 
 import { MenuItemType } from '../SplitButton';
@@ -68,9 +68,9 @@ export const Menu = ({
   }, [setOpen]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    switch (e.keyCode) {
-      case keyMap.Tab:
-      case keyMap.Escape:
+    switch (e.code) {
+      case keyCode.Tab:
+      case keyCode.Escape:
         handleClose();
         break;
     }

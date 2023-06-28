@@ -3,9 +3,10 @@ import {
   fireEvent,
   getAllByRole as globalGetAllByRole,
   render,
+  waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import { MenuItem } from '@leafygreen-ui/menu';
@@ -14,6 +15,8 @@ import { MenuItemsType } from './SplitButton.types';
 import { SplitButton } from '.';
 
 const menuTestId = 'lg-split-button-menu';
+
+const userEvent = userEventSetup.setup();
 
 const getMenuItems = (): MenuItemsType => {
   return [
@@ -136,35 +139,37 @@ describe('packages/split-button', () => {
   });
 
   describe('MenuItem', () => {
-    test('click triggers onChange callback', () => {
+    test('click triggers onChange callback', async () => {
       const onChange = jest.fn();
       const { menuTrigger, getByTestId } = renderSplitButton({ onChange });
 
-      userEvent.click(menuTrigger as HTMLElement);
+      await userEvent.click(menuTrigger as HTMLElement);
 
       const menu = getByTestId(menuTestId);
       const options = globalGetAllByRole(menu, 'menuitem');
-      userEvent.click(options[0]);
+      await userEvent.click(options[0]);
       expect(onChange).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('Keyboard Interaction', () => {
-    type CloseKeys = 'esc' | 'tab';
-    const closeKeys: Array<Array<CloseKeys>> = [['esc'], ['tab']];
+    type CloseKeys = 'Escape' | 'Tab';
+    const closeKeys: Array<Array<CloseKeys>> = [['Escape'], ['Tab']];
 
-    const userEventInteraction = (el: HTMLElement, key: CloseKeys) => {
-      if (key === 'tab') {
-        userEvent.tab();
+    const userEventInteraction = async (el: HTMLElement, key: CloseKeys) => {
+      if (key === 'Tab') {
+        await userEvent.tab();
       } else {
-        userEvent.type(el, `{${key}}`);
+        el.focus();
+        await userEvent.keyboard(`[${key}]`);
       }
     };
 
     describe.each(closeKeys)('%s key', key => {
       test('Closes menu', async () => {
         const { getByTestId, menuTrigger } = renderSplitButton({});
-        userEvent.click(menuTrigger);
+
+        await userEvent.click(menuTrigger);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -175,7 +180,7 @@ describe('packages/split-button', () => {
         const { getByTestId, menuTrigger } = renderSplitButton({
           usePortal: true,
         });
-        userEvent.click(menuTrigger);
+        await userEvent.click(menuTrigger);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -187,7 +192,7 @@ describe('packages/split-button', () => {
         const { getByTestId, menuTrigger } = renderSplitButton({
           usePortal: false,
         });
-        userEvent.click(menuTrigger);
+        await userEvent.click(menuTrigger);
         const menu = getByTestId(menuTestId);
 
         userEventInteraction(menu, key);
@@ -252,9 +257,9 @@ describe('packages/split-button', () => {
       let menu: HTMLElement;
       let options: Array<HTMLElement>;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         const { getByTestId, menuTrigger } = renderSplitButton();
-        userEvent.click(menuTrigger);
+        await userEvent.click(menuTrigger);
         menu = getByTestId(menuTestId);
         options = globalGetAllByRole(menu, 'menuitem');
       });
