@@ -64,10 +64,25 @@ function TooltipContent({
   ...tooltipProps
 }: TooltipContentProps) {
   const focusId = useIdAllocator({ prefix: 'guide-cue' });
-  // Test are failing because of `focus-trap-react`. Even though there is a focusable element it does not find it in time and throws an error. A fix is to point to the primary button and set that as the fallback focus. (https://github.com/focus-trap/focus-trap-react/issues/91)
   const focusTrapOptions = {
-    fallbackFocus: `#${focusId}`,
     clickOutsideDeactivates: true,
+    // Without this check focus-trap cannot find a tabbable element. My guess is because of the tooltip animations focus-trap is looking for a tabbale item too early.
+    checkCanFocusTrap: (trapContainers: Array<HTMLElement | SVGElement>) => {
+      const results = trapContainers.map(() => {
+        return new Promise<void>(resolve => {
+          const interval = setInterval(() => {
+            if (
+              document.body.contains(document.getElementById(`#${focusId}`))
+            ) {
+              resolve();
+              clearInterval(interval);
+            }
+          }, 5);
+        });
+      });
+      // Return a promise that resolves when all the trap containers are able to receive focus
+      return Promise.all(results);
+    },
   };
   return (
     <>
@@ -93,7 +108,9 @@ function TooltipContent({
         usePortal={usePortal}
         {...tooltipProps}
       >
-        <FocusTrap focusTrapOptions={focusTrapOptions}>
+        {/* https://github.com/focus-trap/focus-trap-react/issues/720 */}
+        {/* @ts-expect-error - checkCanFocusTrap throws a type error */}
+        <FocusTrap focusTrapOptions={focusTrapOptions} active={open}>
           <div>
             {!isStandalone && (
               <IconButton
