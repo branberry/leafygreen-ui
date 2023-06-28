@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fireEvent, getByText, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventSetup from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 
 import Button from '@leafygreen-ui/button';
@@ -11,6 +11,8 @@ import { H1 } from '@leafygreen-ui/typography';
 import { SegmentedControlOption } from '../SegmentedControlOption/SegmentedControlOption';
 
 import { SegmentedControl } from './SegmentedControl';
+
+const userEvent = userEventSetup.setup();
 
 const testClassName = 'test-class-name';
 
@@ -97,44 +99,44 @@ describe('packages/segmented-control', () => {
       expect(results).toHaveNoViolations();
     });
 
-    test('tab should focus and unfocus the segmented control', () => {
+    test('tab should focus and unfocus the segmented control', async () => {
       const { apple, banana } = renderNewContainer();
 
       expect(apple).not.toHaveFocus();
       expect(banana).not.toHaveFocus();
-      userEvent.tab();
+      await userEvent.tab();
       expect(apple).toHaveFocus();
       expect(banana).not.toHaveFocus();
-      userEvent.tab();
+      await userEvent.tab();
       expect(apple).not.toHaveFocus();
       expect(banana).not.toHaveFocus();
     });
 
-    test('arrow keys should set focus on the next/previous option', () => {
+    test('arrow keys should set focus on the next/previous option', async () => {
       const { apple, banana } = renderNewContainer();
 
-      userEvent.tab();
+      await userEvent.tab();
       expect(apple).toHaveFocus();
 
-      userEvent.type(apple, '{arrowright}');
+      await userEvent.type(apple, '{arrowright}');
       expect(banana).toHaveFocus();
 
-      userEvent.type(banana, '{arrowright}');
+      await userEvent.type(banana, '{arrowright}');
       expect(apple).toHaveFocus();
 
-      userEvent.type(apple, '{arrowleft}');
+      await userEvent.type(apple, '{arrowleft}');
       expect(banana).toHaveFocus();
 
-      userEvent.type(banana, '{arrowleft}');
+      await userEvent.type(banana, '{arrowleft}');
       expect(apple).toHaveFocus();
     });
 
-    test('enter key should select an option', () => {
+    test('enter key should select an option', async () => {
       const { apple, banana } = renderNewContainer();
-      userEvent.tab();
-      userEvent.type(apple, '{arrowright}');
+      await userEvent.tab();
+      await userEvent.type(apple, '{arrowright}');
       expect(banana).toHaveFocus();
-      userEvent.type(banana, '{enter}');
+      await userEvent.type(banana, '{enter}');
       expect(banana).toHaveAttribute('aria-selected', 'true');
     });
   });
@@ -151,10 +153,10 @@ describe('packages/segmented-control', () => {
       expect(apple).toHaveAttribute('aria-selected', 'true');
     });
 
-    test('Sets the clicked option to `checked`', () => {
+    test('Sets the clicked option to `checked`', async () => {
       const { banana } = renderNewContainer();
 
-      userEvent.click(banana);
+      await userEvent.click(banana);
       expect(banana).toHaveAttribute('aria-selected', 'true');
     });
 
@@ -205,12 +207,12 @@ describe('packages/segmented-control', () => {
   });
 
   describe('when uncontrolled', () => {
-    test('clicking a new option changes the selected option', () => {
+    test('clicking a new option changes the selected option', async () => {
       const { apple, banana } = renderNewContainer();
 
-      userEvent.click(banana);
+      await userEvent.click(banana);
       expect(banana).toHaveAttribute('aria-selected', 'true');
-      userEvent.click(apple);
+      await userEvent.click(apple);
       expect(apple).toHaveAttribute('aria-selected', 'true');
     });
   });
