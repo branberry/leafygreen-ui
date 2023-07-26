@@ -1,0 +1,15 @@
+{
+  "name": "@lg-tools/turbo-cache",
+  "version": "0.0.1",
+  "description": "TurboRepo cache for LeafyGreen",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "build": "lg build-package",
+    "pull": "realm-cli pull"
+  },
+  "dependencies": {
+    "turborepo-remote-cache": "^1.14.3"
+  }
+}

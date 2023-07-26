@@ -1,0 +1,9 @@
+[
+  {
+    "name": "turbo-cache-lambda",
+    "private": false,
+    "can_evaluate": true,
+    "disable_arg_logs": false,
+    "run_as_system": true
+  }
+]
