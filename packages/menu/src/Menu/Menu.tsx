@@ -9,19 +9,22 @@ import isUndefined from 'lodash/isUndefined';
 import PropTypes from 'prop-types';
 
 import { css, cx } from '@leafygreen-ui/emotion';
-import { useAvailableSpace, useEventListener } from '@leafygreen-ui/hooks';
+import {
+  useAvailableSpace,
+  useBackdropClick,
+  useEventListener,
+  useForceRerender,
+} from '@leafygreen-ui/hooks';
 import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
 import { isComponentType, keyMap, Theme } from '@leafygreen-ui/lib';
 import { palette } from '@leafygreen-ui/palette';
 import Popover, { Align, Justify } from '@leafygreen-ui/popover';
 
 import { MenuContext } from '../MenuContext/MenuContext';
-import { FocusableMenuItemElement } from '../MenuItem/FocusableMenuItem';
-import { MenuItemElement } from '../MenuItem/MenuItem';
-import MenuSeparator, {
-  MenuSeparatorElement,
-} from '../MenuSeparator/MenuSeparator';
-import { SubMenuElement } from '../SubMenu/SubMenu';
+import MenuSeparator from '../MenuSeparator/MenuSeparator';
+import { SubMenu, type SubMenuProps } from '../SubMenu/';
+import { ElementOf } from '../types';
+import { DescendantContext, useDescendants } from '../utils/useDescendants';
 
 import { MenuProps } from './Menu.types';
 
@@ -68,59 +71,73 @@ const scrollContainerStyle = css`
  * @param props.trigger Trigger element can be ReactNode or function, and, if present, internally manages active state of Menu.
  * @param props.darkMode Determines whether or not the component will be rendered in dark theme.
  */
-export function Menu({
-  align = Align.Bottom,
-  justify = Justify.End,
-  adjustOnMutation = false,
-  shouldClose = () => true,
-  spacing = 6,
-  open: controlledOpen,
-  setOpen: controlledSetOpen,
-  children,
-  className,
-  refEl,
-  trigger,
-  usePortal = true,
-  portalClassName,
-  portalContainer,
-  scrollContainer,
-  popoverZIndex,
-  maxHeight = 344,
-  darkMode: darkModeProp,
-  ...rest
-}: MenuProps) {
+export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
+  {
+    align = Align.Bottom,
+    justify = Justify.End,
+    adjustOnMutation = false,
+    shouldClose = () => true,
+    spacing = 6,
+    maxHeight = 344,
+    usePortal = true,
+    open: controlledOpen,
+    setOpen: controlledSetOpen,
+    darkMode: darkModeProp,
+    children,
+    className,
+    refEl,
+    trigger,
+    portalClassName,
+    portalContainer,
+    scrollContainer,
+    popoverZIndex,
+    ...rest
+  }: MenuProps,
+  forwardRef,
+) {
+  const { ref: popoverRef, ...contextProps } = useDescendants();
   const { theme, darkMode } = useDarkMode(darkModeProp);
 
   const hasSetInitialFocus = useRef(false);
   const hasSetInitialOpen = useRef(false);
 
   const [, setClosed] = useState(false);
-  const [currentSubMenu, setCurrentSubMenu] = useState<SubMenuElement | null>(
-    null,
-  );
+  const currentSubMenuRef = useRef<ElementOf<typeof SubMenu> | null>(null);
   const [uncontrolledOpen, uncontrolledSetOpen] = useState(false);
 
   const setOpen =
     (typeof controlledOpen === 'boolean' && controlledSetOpen) ||
     uncontrolledSetOpen;
   const open = controlledOpen ?? uncontrolledOpen;
+  const handleClose = useCallback(() => {
+    if (shouldClose()) {
+      setOpen(false);
+    }
+  }, [setOpen, shouldClose]);
+
+  // Used to trigger a state update when the current subMenu changes since the current subMenu is stored in a ref to avoid extra rerenders on initial load.
+  const updateCurrentSubMenu = useForceRerender();
 
   const triggerRef = useRef<HTMLElement>(null);
+  // This hook causes a second re-render on initial load. `useAvailableSpace` uses `useViewportSize` internally, which has internal state that causes re-renders.
   const availableSpace = useAvailableSpace(refEl || triggerRef, spacing);
-  const maxMenuHeightValue = !isUndefined(availableSpace)
-    ? `${Math.min(availableSpace, maxHeight)}px`
+  const memoizedAvailableSpace = useMemo(
+    () => availableSpace,
+    [availableSpace],
+  );
+  const maxMenuHeightValue = !isUndefined(memoizedAvailableSpace)
+    ? `${Math.min(memoizedAvailableSpace, maxHeight)}px`
     : 'unset';
 
-  const { updatedChildren, refs } = React.useMemo(() => {
+  const { updatedChildren } = React.useMemo(() => {
     if (
       children == null ||
       ['boolean', 'number', 'string'].includes(typeof children)
     ) {
-      return { updatedChildren: undefined, refs: [] };
+      return { updatedChildren: undefined };
     }
 
     const titleArr: Array<string> = [];
-    const refs: Array<HTMLElement> = [];
 
     function updateChildren(children: React.ReactNode): React.ReactNode {
       return React.Children.map(children, child => {
@@ -130,59 +147,62 @@ export function Menu({
 
         const { props } = child;
 
-        let currentChildRef: HTMLElement | null = null;
-
-        const setRef = (ref: HTMLElement) => {
-          if (ref == null) {
-            return;
-          }
-
-          refs.push(ref);
-          currentChildRef = ref;
-
-          if (open && hasSetInitialFocus.current === false) {
-            setFocus(refs[0]);
-            hasSetInitialFocus.current = true;
-          }
-        };
+        const currentChildRef: HTMLElement | null = null;
 
         const title = props?.title ?? false;
 
         const onFocus = ({ target }: React.FocusEvent<HTMLElement>) => {
-          setFocused(target);
+          focusedRef.current = target;
         };
 
-        if (isComponentType<SubMenuElement>(child, 'SubMenu') && title) {
+        if (
+          isComponentType<ElementOf<typeof SubMenu>>(child, 'SubMenu') &&
+          title
+        ) {
           if (titleArr.includes(title)) {
             throw new Error('SubMenu titles must be unique');
           }
 
           titleArr.push(title);
 
-          if (!currentSubMenu && props.active && !hasSetInitialOpen.current) {
-            setCurrentSubMenu(child);
+          const shouldOpenActiveSubMenu =
+            !currentSubMenuRef.current &&
+            props.active &&
+            !hasSetInitialOpen.current;
+
+          // This opens the active submenu on inital load
+          if (shouldOpenActiveSubMenu) {
+            // Using a ref here prevents an extra rerender on initial load.
+            currentSubMenuRef.current = child;
             hasSetInitialOpen.current = true;
           }
 
-          const isCurrentSubMenu = currentSubMenu?.props.title === title;
+          const isCurrentSubMenu =
+            (currentSubMenuRef.current?.props as SubMenuProps)?.title === title;
 
           return React.cloneElement(child, {
-            ref: setRef,
             open: isCurrentSubMenu,
             setOpen: (state: boolean) => {
               if (currentChildRef) {
-                setFocused(currentChildRef);
+                focusedRef.current = currentChildRef;
               }
 
-              setCurrentSubMenu(state ? child : null);
+              currentSubMenuRef.current = state ? child : null;
+              hasSetInitialOpen.current = true;
+              // Force update since the updated currentSubMenu is set in a ref.
+              updateCurrentSubMenu();
             },
             onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => {
               if (e.keyCode === keyMap.ArrowLeft && isCurrentSubMenu) {
-                setCurrentSubMenu(null);
+                currentSubMenuRef.current = null;
+                hasSetInitialOpen.current = true;
+                updateCurrentSubMenu();
               }
 
               if (e.keyCode === keyMap.ArrowRight) {
-                setCurrentSubMenu(child);
+                currentSubMenuRef.current = child;
+                hasSetInitialOpen.current = true;
+                updateCurrentSubMenu();
               }
             },
             onFocus,
@@ -193,23 +213,23 @@ export function Menu({
           });
         }
 
-        if (isComponentType<MenuItemElement>(child, 'MenuItem')) {
+        if (isComponentType(child, 'MenuItem')) {
           return React.cloneElement(child, {
-            ref: setRef,
+            onFocus,
+            onClick: (e: React.MouseEvent) => {
+              child.props?.onClick?.(e);
+              handleClose();
+            },
+          });
+        }
+
+        if (isComponentType(child, 'FocusableMenuItem')) {
+          return React.cloneElement(child, {
             onFocus,
           });
         }
 
-        if (
-          isComponentType<FocusableMenuItemElement>(child, 'FocusableMenuItem')
-        ) {
-          return React.cloneElement(child, {
-            ref: setRef,
-            onFocus,
-          });
-        }
-
-        if (isComponentType<MenuSeparatorElement>(child, 'MenuSeparator')) {
+        if (isComponentType(child, 'MenuSeparator')) {
           return <MenuSeparator {...props} />;
         }
 
@@ -225,95 +245,83 @@ export function Menu({
       });
     }
 
-    return { updatedChildren: updateChildren(children), refs };
-  }, [children, currentSubMenu, open]);
+    return { updatedChildren: updateChildren(children) };
+  }, [children, updateCurrentSubMenu, handleClose]);
 
-  const [focused, setFocused] = useState<HTMLElement>(refs[0] || null);
+  const enabledItems: Array<HTMLElement> = useMemo(() => {
+    const temp: Array<HTMLElement> = [];
+    contextProps.map.current.forEach(({ disabled, element }) => {
+      if (!disabled && element) {
+        temp.push(element);
+      }
+    });
 
-  const [popoverNode, setPopoverNode] = useState<HTMLUListElement | null>(null);
+    return temp;
+  }, [contextProps]);
+
+  const focusedRef = useRef<HTMLElement | null>(enabledItems[0] || null);
 
   const setFocus = (el: HTMLElement | null) => {
     if (el == null) {
       return;
     }
 
-    setFocused(el);
+    focusedRef.current = el;
     el.focus();
   };
 
   useEffect(() => {
     if (open) {
-      hasSetInitialFocus.current = false;
       hasSetInitialOpen.current = false;
     }
   }, [open]);
 
-  const handleClose = useCallback(() => {
-    if (shouldClose()) {
-      setOpen(false);
+  useEffect(() => {
+    if (
+      open &&
+      hasSetInitialFocus.current === false &&
+      document.body.contains(enabledItems[0])
+    ) {
+      setFocus(enabledItems[0]);
+      hasSetInitialFocus.current = true;
+    } else {
+      contextProps.force();
     }
-  }, [setOpen, shouldClose]);
+  }, [open, enabledItems, contextProps]);
 
-  const handleBackdropClick = useCallback(
-    (e: MouseEvent) => {
-      if (popoverNode && !popoverNode.contains(e.target as HTMLElement)) {
-        handleClose();
-      }
-    },
-    [handleClose, popoverNode],
-  );
-
-  useEventListener('click', handleBackdropClick, {
-    enabled: open,
-  });
-
-  function trapLastMenuItem(refs: Array<HTMLElement>) {
-    if (document.activeElement === refs[refs.length - 1]) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function trapFirstMenuItem() {
-    const filteredRefs = refs.filter(ref => ref !== null);
-
-    if (document.activeElement === filteredRefs[0]) {
-      return true;
-    }
-
-    return false;
-  }
+  useBackdropClick(handleClose, [popoverRef, triggerRef], open);
 
   function handleKeyDown(e: KeyboardEvent) {
-    const filteredRefs = refs.filter(ref => ref !== null);
     let refToFocus: HTMLElement;
 
     switch (e.keyCode) {
       case keyMap.ArrowDown:
         e.preventDefault(); // Prevents page scrolling
-        refToFocus = refs[(refs.indexOf(focused!) + 1) % refs.length];
+        refToFocus =
+          enabledItems[
+            (enabledItems.indexOf(focusedRef.current!) + 1) %
+              enabledItems.length
+          ];
+
         setFocus(refToFocus);
         break;
 
       case keyMap.ArrowUp:
         e.preventDefault(); // Prevents page scrolling
         refToFocus =
-          refs[(refs.indexOf(focused!) - 1 + refs.length) % refs.length];
+          enabledItems[
+            (enabledItems.indexOf(focusedRef.current!) -
+              1 +
+              enabledItems.length) %
+              enabledItems.length
+          ];
         setFocus(refToFocus);
         break;
 
       case keyMap.Tab:
-        if (!e.shiftKey && trapLastMenuItem(filteredRefs)) {
-          e.preventDefault();
-          setFocus(refs[0]);
-        }
-
-        if (e.shiftKey && trapFirstMenuItem()) {
-          e.preventDefault();
-          setFocus(filteredRefs[filteredRefs.length - 1]);
-        }
-
+        e.preventDefault(); // Prevent tabbing outside of portal and outside of the DOM when `usePortal={true}`
+        handleClose();
+        setFocus((refEl || triggerRef)?.current); // Focus the trigger on close
         break;
 
       case keyMap.Escape:
@@ -324,7 +332,7 @@ export function Menu({
       case keyMap.Space:
       case keyMap.Enter:
         if (!open) {
-          setFocus(refs[0]);
+          setFocus(enabledItems[0]);
         }
         break;
     }
@@ -350,40 +358,43 @@ export function Menu({
   }, [theme, darkMode]);
 
   const popoverContent = (
-    <MenuContext.Provider value={providerData}>
-      <Popover
-        key="popover"
-        active={open}
-        align={align}
-        justify={justify}
-        refEl={refEl}
-        adjustOnMutation={adjustOnMutation}
-        {...popoverProps}
-      >
-        <div
-          className={cx(
-            rootMenuStyle,
-            rootMenuThemeStyles[theme],
-            css`
-              max-height: ${maxMenuHeightValue};
-            `,
-            className,
-          )}
+    <DescendantContext.Provider value={contextProps}>
+      <MenuContext.Provider value={providerData}>
+        <Popover
+          key="popover"
+          active={open}
+          align={align}
+          justify={justify}
+          refEl={refEl}
+          adjustOnMutation={adjustOnMutation}
+          {...popoverProps}
         >
-          {/* Need to stop propagation, otherwise Menu will closed automatically when clicked */}
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events*/}
-          <ul
-            {...rest}
-            className={scrollContainerStyle}
-            role="menu"
-            ref={setPopoverNode}
-            onClick={e => e.stopPropagation()}
+          <div
+            className={cx(
+              rootMenuStyle,
+              rootMenuThemeStyles[theme],
+              css`
+                max-height: ${maxMenuHeightValue};
+              `,
+              className,
+            )}
+            ref={forwardRef}
           >
-            {updatedChildren}
-          </ul>
-        </div>
-      </Popover>
-    </MenuContext.Provider>
+            {/* Need to stop propagation, otherwise Menu will closed automatically when clicked */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events*/}
+            <ul
+              {...rest}
+              className={scrollContainerStyle}
+              role="menu"
+              onClick={e => e.stopPropagation()}
+              ref={popoverRef}
+            >
+              {updatedChildren}
+            </ul>
+          </div>
+        </Popover>
+      </MenuContext.Provider>
+    </DescendantContext.Provider>
   );
 
   if (trigger) {
@@ -405,6 +416,8 @@ export function Menu({
         onClick: triggerClickHandler,
         ref: triggerRef,
         children: popoverContent,
+        ['aria-expanded']: open,
+        ['aria-haspopup']: true,
       });
     }
 
@@ -417,13 +430,15 @@ export function Menu({
           {popoverContent}
         </>
       ),
+      ['aria-expanded']: open,
+      ['aria-haspopup']: true,
     });
 
     return renderedTrigger;
   }
 
   return popoverContent;
-}
+});
 
 Menu.displayName = 'Menu';
 
@@ -443,6 +458,6 @@ Menu.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   darkMode: PropTypes.bool,
-};
+} as any;
 
 export default Menu;

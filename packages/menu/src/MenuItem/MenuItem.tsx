@@ -5,9 +5,6 @@ import { cx } from '@leafygreen-ui/emotion';
 import { createUniqueClassName, getNodeTextContent } from '@leafygreen-ui/lib';
 import {
   InferredPolymorphic,
-  InferredPolymorphicProps,
-  PolymorphicAs,
-  PolymorphicPropsWithRef,
   useInferredPolymorphic,
 } from '@leafygreen-ui/polymorphic';
 
@@ -34,6 +31,7 @@ import {
   titleTextStyle,
 } from '../styles';
 import { Size } from '../types';
+import { useDescendant } from '../utils/useDescendants';
 
 import { disabledIconStyle } from './MenuItem.styles';
 import { MenuItemProps } from './MenuItem.types';
@@ -43,6 +41,7 @@ const menuItemContainerClassName = createUniqueClassName('menu-item-container');
 export const MenuItem = InferredPolymorphic<MenuItemProps, 'button'>(
   (
     {
+      as,
       disabled = false,
       active = false,
       size = Size.Default,
@@ -50,12 +49,12 @@ export const MenuItem = InferredPolymorphic<MenuItemProps, 'button'>(
       children,
       description,
       glyph,
-      as = 'button' as PolymorphicAs,
       ...rest
     },
-    ref: React.Ref<any>,
+    __,
   ) => {
-    const { Component } = useInferredPolymorphic(as, rest);
+    const { ref } = useDescendant({ disabled });
+    const { Component } = useInferredPolymorphic(as, rest, 'button');
     const { theme } = useContext(MenuContext);
     const hoverStyles = getHoverStyles(menuItemContainerClassName, theme);
     const focusStyles = getFocusedStyles(menuItemContainerClassName, theme);
@@ -81,7 +80,7 @@ export const MenuItem = InferredPolymorphic<MenuItemProps, 'button'>(
     const baseProps = {
       ref,
       role: 'menuitem',
-      tabIndex: disabled ? -1 : undefined,
+      tabIndex: -1,
       'aria-disabled': disabled,
       'aria-current': active ?? undefined,
       // only add a disabled prop if not an anchor
@@ -159,9 +158,8 @@ export const MenuItem = InferredPolymorphic<MenuItemProps, 'button'>(
       </li>
     );
   },
+  'MenuItem',
 );
-
-MenuItem.displayName = 'MenuItem';
 
 MenuItem.propTypes = {
   onClick: PropTypes.func,
@@ -173,10 +171,3 @@ MenuItem.propTypes = {
 };
 
 export default MenuItem;
-
-export type MenuItemElementProps = PolymorphicPropsWithRef<
-  PolymorphicAs,
-  InferredPolymorphicProps<MenuItemProps>
->;
-
-export type MenuItemElement = React.Component<MenuItemElementProps>;

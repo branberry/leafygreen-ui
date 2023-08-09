@@ -1,26 +1,44 @@
+import isObject from 'lodash/isObject';
 import once from 'lodash/once';
 import * as typeIs from './typeIs';
 import createUniqueClassName from './createUniqueClassName';
 import getNodeTextContent from './getNodeTextContent';
 import DarkModeProps, { Theme } from './DarkModeProps';
 import getTheme from './getTheme';
+import { allEqual } from './allEqual';
 export { validateChildren } from './validateChildren';
 export { createSyntheticEvent } from './createSyntheticEvent';
 
 export {
+  type ExtendedComponentProps,
+  type GeneratedStoryConfig,
+  type GeneratedStoryFn,
+  type InstanceDecorator,
+  type PlayFn,
+  StoryMeta,
+  type StoryMetaType,
+  type StoryType,
   storybookArgTypes,
+  storybookExcludedArgTypes,
   storybookExcludedControlParams,
   IntrinsicElements,
 } from './storybook';
 
-export { typeIs, createUniqueClassName, getNodeTextContent, getTheme, Theme };
+export {
+  typeIs,
+  createUniqueClassName,
+  getNodeTextContent,
+  getTheme,
+  Theme,
+  allEqual,
+};
 export type { DarkModeProps };
 
 /** Helper type to extract an HTML element's valid props */
 export type HTMLElementProps<
   Element extends keyof JSX.IntrinsicElements,
   RefType extends HTMLElement = never,
-> = Omit<JSX.IntrinsicElements[Element], 'ref'> & {
+> = React.PropsWithChildren<Omit<JSX.IntrinsicElements[Element], 'ref'>> & {
   ref?: [RefType] extends [never] ? never : React.Ref<RefType>;
   key?: React.Key | null;
 };
@@ -70,15 +88,19 @@ export type OneOf<T1, T2> =
   | (T2 & Partial<Record<Exclude<keyof T1, keyof T2>, never>>);
 
 /** Helper type to check if element is a specific React Component  */
-export function isComponentType<T = React.ReactElement>(
-  element: React.ReactNode,
-  displayName: string,
-): element is T {
+export function isComponentType<
+  T extends React.ReactElement = React.ReactElement,
+>(element: React.ReactNode, displayName: string): element is T {
   return (
     element != null &&
     typeof element === 'object' &&
     'type' in element &&
-    (element.type as any).displayName === displayName
+    ((element.type as any).displayName === displayName ||
+      // TODO: temp solution; Components using InferredPolymorphic have a displayName inside render.
+      // https://jira.mongodb.org/browse/LG-3232
+      (isObject(element.type as any) &&
+        'render' in (element.type as any) &&
+        (element.type as any).render?.displayName === displayName))
   );
 }
 
