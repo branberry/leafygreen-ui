@@ -3,7 +3,7 @@ module.exports = {
   plugins: ['@emotion', '@lg-tools', 'simple-import-sort'],
   extends: [
     'eslint:recommended',
-    'plugin:@lg-tools/contributor',
+    'plugin:@lg-tools/maintainer',
     'plugin:jest/recommended',
     'plugin:jsx-a11y/recommended',
     'plugin:react/recommended',
