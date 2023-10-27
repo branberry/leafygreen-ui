@@ -26,6 +26,9 @@
       "path": "../button"
     },
     {
+      "path": "../dropdown"
+    },
+    {
       "path": "../emotion"
     },
     {

@@ -1,20 +1,17 @@
 import React, { useCallback, useContext } from 'react';
 import isUndefined from 'lodash/isUndefined';
 
-import { css, cx } from '@leafygreen-ui/emotion';
+import { Dropdown } from '@leafygreen-ui/dropdown';
+import { cx } from '@leafygreen-ui/emotion';
 import { useAvailableSpace } from '@leafygreen-ui/hooks';
-import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
-import Popover, { Align, Justify } from '@leafygreen-ui/popover';
+import { Align, Justify } from '@leafygreen-ui/popover';
 
 import { DropdownWidthBasis } from '../Select/Select.types';
 import SelectContext from '../SelectContext';
-import { mobileSizeSet } from '../styleSets';
-import { MobileMediaQuery, useForwardedRef } from '../utils';
+import { useForwardedRef } from '../utils';
 
 import {
   autoWidthStyles,
-  baseMenuStyle,
-  getMenuStyles,
   maxMenuHeight,
   menuMargin,
   popoverClassName,
@@ -32,6 +29,7 @@ const ListMenu = React.forwardRef<HTMLUListElement, ListMenuProps>(
       referenceElement,
       className,
       labelId,
+      setOpen,
       dropdownWidthBasis,
       usePortal = true,
       portalContainer,
@@ -41,15 +39,14 @@ const ListMenu = React.forwardRef<HTMLUListElement, ListMenuProps>(
     }: ListMenuProps,
     forwardedRef,
   ) {
-    const { theme } = useDarkMode();
-    const { size, disabled, open } = useContext(SelectContext);
+    const { disabled, open } = useContext(SelectContext);
 
     const ref = useForwardedRef(forwardedRef, null);
 
     const availableSpace = useAvailableSpace(referenceElement, menuMargin);
     const maxHeightValue = !isUndefined(availableSpace)
-      ? `${Math.min(availableSpace, maxMenuHeight)}px`
-      : 'unset';
+      ? Math.min(availableSpace, maxMenuHeight)
+      : undefined;
 
     const onClick = useCallback(
       (event: React.MouseEvent) => {
@@ -69,8 +66,10 @@ const ListMenu = React.forwardRef<HTMLUListElement, ListMenuProps>(
     };
 
     return (
-      <Popover
-        active={open && !disabled}
+      <Dropdown
+        {...popoverProps}
+        open={open && !disabled}
+        setOpen={setOpen}
         spacing={6}
         align={Align.Bottom}
         justify={Justify.Start}
@@ -78,32 +77,15 @@ const ListMenu = React.forwardRef<HTMLUListElement, ListMenuProps>(
         className={cx(popoverClassName, className, {
           [autoWidthStyles]: dropdownWidthBasis === DropdownWidthBasis.Option,
         })}
-        refEl={referenceElement}
-        {...popoverProps}
+        triggerRef={referenceElement}
+        onClick={onClick}
+        maxHeight={maxHeightValue}
+        id={id}
+        aria-labelledby={labelId}
+        ref={ref}
       >
-        {/* Keyboard events handled in Select component through event listener hook */}
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
-        <ul
-          aria-labelledby={labelId}
-          role="listbox"
-          ref={ref}
-          tabIndex={-1}
-          onClick={onClick}
-          className={cx(
-            baseMenuStyle,
-            getMenuStyles(theme, size),
-            css`
-              max-height: ${maxHeightValue};
-              ${MobileMediaQuery} {
-                font-size: ${mobileSizeSet.option.text}px;
-              }
-            `,
-          )}
-          id={id}
-        >
-          {children}
-        </ul>
-      </Popover>
+        {children}
+      </Dropdown>
     );
   },
 );

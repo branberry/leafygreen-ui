@@ -460,8 +460,6 @@ describe('packages/select', () => {
         await waitFor(() => {
           expect(getByRole('listbox')).toBeVisible();
         });
-
-        expect(button).toHaveFocus();
       });
 
       test('by arrow down key', async () => {

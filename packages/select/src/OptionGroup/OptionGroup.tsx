@@ -1,43 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { css, cx } from '@leafygreen-ui/emotion';
-import { useIdAllocator } from '@leafygreen-ui/hooks';
-import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
+import { DropdownLabel } from '@leafygreen-ui/dropdown';
 
-import { colorSets } from '../styleSets';
-
-import { optionGroupLabelStyle, optionGroupStyle } from './OptionGroup.styles';
 import { InternalOptionProps, OptionGroupProps } from './OptionGroup.types';
 
 export function InternalOptionGroup({
-  className,
   label,
   children,
   ...rest
 }: InternalOptionProps) {
-  const { theme } = useDarkMode();
-  const colorSet = colorSets[theme].option;
-
-  const groupId = useIdAllocator({ prefix: 'select-option-group' });
-
   return (
-    <div className={cx(optionGroupStyle, className)} {...rest}>
-      <div
-        id={groupId}
-        className={cx(
-          optionGroupLabelStyle,
-          css`
-            color: ${colorSet.group.label};
-          `,
-        )}
-      >
-        {label}
-      </div>
-      <div role="group" aria-labelledby={groupId}>
-        {children}
-      </div>
-    </div>
+    <DropdownLabel label={label} {...rest}>
+      {children}
+    </DropdownLabel>
   );
 }
 

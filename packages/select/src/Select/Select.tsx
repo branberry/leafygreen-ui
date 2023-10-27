@@ -14,7 +14,6 @@ import {
   useEventListener,
   useForwardedRef,
   useIdAllocator,
-  useViewportSize,
 } from '@leafygreen-ui/hooks';
 import LeafyGreenProvider, {
   useDarkMode,
@@ -220,7 +219,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
           setUncontrolledSelectedOption(option);
         }
         onChange?.(getOptionValue(option), event);
-        setFocusedOption(undefined);
+        // setFocusedOption(undefined);
         onClose();
       },
       [onChange, onClose, value],
@@ -242,85 +241,8 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
     );
 
     /**
-     * Focus
+     * Keyboard
      */
-
-    const [focusedOption, setFocusedOption] = useState<
-      OptionElement | null | undefined
-    >();
-
-    const enabledOptions = useMemo(() => {
-      const enabledOptions: Array<OptionElement | null> = [];
-
-      if (allowDeselect) {
-        enabledOptions.push(null);
-      }
-
-      traverseSelectChildren(children, (option, group) => {
-        if (!isOptionDisabled(option, group)) {
-          enabledOptions.push(option);
-        }
-      });
-
-      return enabledOptions;
-    }, [children, allowDeselect]);
-
-    const onSelectFocusedOption = useCallback(
-      (event: KeyboardEvent) => {
-        if (focusedOption !== undefined) {
-          onSelect(focusedOption, event);
-        }
-      },
-      [focusedOption, onSelect],
-    );
-
-    const onFocusFirstOption = useCallback(() => {
-      setFocusedOption(enabledOptions[0]);
-    }, [enabledOptions]);
-
-    const onFocusLastOption = useCallback(() => {
-      setFocusedOption(enabledOptions[enabledOptions.length - 1]);
-    }, [enabledOptions]);
-
-    const onFocusPreviousOption = useCallback(() => {
-      if (
-        focusedOption === undefined ||
-        enabledOptions.indexOf(focusedOption) === 0
-      ) {
-        onFocusLastOption();
-      } else {
-        const index = enabledOptions.indexOf(focusedOption) - 1;
-        setFocusedOption(enabledOptions[index]);
-      }
-    }, [enabledOptions, focusedOption, onFocusLastOption]);
-
-    const onFocusNextOption = useCallback(() => {
-      if (
-        focusedOption === undefined ||
-        enabledOptions.indexOf(focusedOption) === enabledOptions.length - 1
-      ) {
-        onFocusFirstOption();
-      } else {
-        const index = enabledOptions.indexOf(focusedOption) + 1;
-
-        setFocusedOption(enabledOptions[index]);
-      }
-    }, [enabledOptions, focusedOption, onFocusFirstOption]);
-
-    const getOptionFocusHandler = useCallback(
-      (option: OptionElement | null, optionDisabled: boolean) => {
-        return (event: React.FocusEvent) => {
-          event.preventDefault();
-          event.stopPropagation();
-
-          if (!disabled && !optionDisabled) {
-            setFocusedOption(option);
-          }
-        };
-      },
-      [disabled],
-    );
-
     const onKeyDown = useCallback(
       (event: KeyboardEvent) => {
         // No support for modifiers yet
@@ -339,47 +261,24 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
         // We only respond to keypresses if the focus is in the component
         if (isFocusInComponent) {
           switch (event.key) {
-            case keyMap.Tab:
-            case keyMap.Escape:
-              onClose();
-              setFocusedOption(undefined);
-              break;
-            case keyMap.Enter:
-            case keyMap.Space:
-              if (open && !isFocusOnButton) {
-                // Default behavior is to use these keys to open the dropdown but we handle that manually
-                event.preventDefault();
-              }
-
-              onSelectFocusedOption(event);
-              break;
             case keyMap.ArrowUp:
               if (!open && isFocusOnButton) {
                 onOpen();
               }
-              event.preventDefault(); // Prevents page scrolling
-              onFocusPreviousOption();
               break;
+
             case keyMap.ArrowDown:
               if (!open && isFocusOnButton) {
                 onOpen();
               }
-              event.preventDefault(); // Prevents page scrolling
-              onFocusNextOption();
+              break;
+
+            default:
               break;
           }
         }
       },
-      [
-        listMenuRef,
-        menuButtonRef,
-        onClose,
-        open,
-        onSelectFocusedOption,
-        onFocusPreviousOption,
-        onFocusNextOption,
-        onOpen,
-      ],
+      [listMenuRef, menuButtonRef, open, onOpen],
     );
 
     useEventListener('keydown', onKeyDown);
@@ -387,8 +286,6 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
     /**
      * Rendering
      */
-
-    const viewportSize = useViewportSize();
 
     const hasGlyphs = useMemo(() => {
       let hasGlyphs = false;
@@ -400,15 +297,6 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
       return hasGlyphs;
     }, [children]);
 
-    const canTriggerScrollIntoView = useMemo(
-      () =>
-        viewportSize !== null &&
-        listMenuRef.current !== null &&
-        focusedOption === undefined &&
-        open,
-      [focusedOption, listMenuRef, open, viewportSize],
-    );
-
     const deselectionOption = useMemo(() => {
       const selected = selectedOption === null;
 
@@ -417,24 +305,14 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
           className={undefined}
           glyph={undefined}
           selected={selected}
-          focused={focusedOption === null}
           disabled={false}
           onClick={getOptionClickHandler(null, false)}
-          onFocus={getOptionFocusHandler(null, false)}
           hasGlyphs={false}
-          triggerScrollIntoView={selected && canTriggerScrollIntoView}
         >
           {placeholder}
         </InternalOption>
       );
-    }, [
-      canTriggerScrollIntoView,
-      focusedOption,
-      getOptionClickHandler,
-      getOptionFocusHandler,
-      placeholder,
-      selectedOption,
-    ]);
+    }, [getOptionClickHandler, placeholder, selectedOption]);
 
     const renderedChildren = useMemo(
       () =>
@@ -449,13 +327,10 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
               className: option.props.className,
               glyph: option.props.glyph,
               selected,
-              focused: option === focusedOption,
               disabled,
               children: option.props.children,
               hasGlyphs,
               onClick: getOptionClickHandler(option, disabled),
-              onFocus: getOptionFocusHandler(option, disabled),
-              triggerScrollIntoView: selected && canTriggerScrollIntoView,
             };
           },
           () => {
@@ -464,15 +339,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             );
           },
         ),
-      [
-        canTriggerScrollIntoView,
-        children,
-        focusedOption,
-        getOptionClickHandler,
-        getOptionFocusHandler,
-        hasGlyphs,
-        selectedOption,
-      ],
+      [children, getOptionClickHandler, hasGlyphs, selectedOption],
     );
 
     const popoverProps = {
@@ -582,6 +449,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
                 id={menuId}
                 referenceElement={menuButtonRef}
                 ref={listMenuRef}
+                setOpen={setOpen}
                 className={cx({
                   [css`
                     width: ${menuButtonRef.current?.clientWidth}px;

@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { HTMLElementProps } from '@leafygreen-ui/lib';
 import { PopoverProps } from '@leafygreen-ui/popover';
 
@@ -12,4 +14,5 @@ export interface ListMenuProps
   className?: string;
   labelId?: string;
   dropdownWidthBasis: DropdownWidthBasis;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }

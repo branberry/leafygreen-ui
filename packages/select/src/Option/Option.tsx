@@ -1,15 +1,11 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
+import { DropdownItem } from '@leafygreen-ui/dropdown';
 import { css, cx } from '@leafygreen-ui/emotion';
-import { usePrevious } from '@leafygreen-ui/hooks';
 import { isComponentGlyph } from '@leafygreen-ui/icon';
 import CheckmarkIcon from '@leafygreen-ui/icon/dist/Checkmark';
-import {
-  descriptionClassName,
-  InputOption,
-  InputOptionContent,
-} from '@leafygreen-ui/input-option';
+import { descriptionClassName } from '@leafygreen-ui/input-option';
 import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
 import { fontWeights } from '@leafygreen-ui/tokens';
 
@@ -29,11 +25,8 @@ export function InternalOption({
   className,
   glyph,
   selected,
-  focused,
   disabled,
   onClick,
-  onFocus,
-  triggerScrollIntoView,
   hasGlyphs,
   description,
   ...rest
@@ -41,45 +34,6 @@ export function InternalOption({
   const { theme } = useDarkMode();
 
   const { option: colorSet } = colorSets[theme];
-
-  const ref = useRef<HTMLLIElement>(null);
-
-  const scrollIntoView = useCallback(() => {
-    if (ref.current == null) {
-      return null;
-    }
-
-    const element = ref.current;
-    const parent = element?.offsetParent;
-
-    if (!parent) {
-      return null;
-    }
-
-    // Can't use Element.scrollIntoView because it might
-    // cause scrolling outside the immediate parent.
-    parent.scrollTop =
-      element.offsetTop + (element.clientHeight - parent.clientHeight) / 2;
-  }, [ref]);
-
-  const alreadyScrolledIntoView = usePrevious(triggerScrollIntoView);
-  const shouldScrollIntoView =
-    triggerScrollIntoView && !alreadyScrolledIntoView;
-
-  useEffect(() => {
-    if (shouldScrollIntoView) {
-      scrollIntoView();
-    }
-  }, [scrollIntoView, shouldScrollIntoView]);
-
-  const wasFocused = usePrevious(focused);
-  const shouldFocus = focused && !wasFocused;
-
-  useEffect(() => {
-    if (shouldFocus) {
-      ref.current!.focus();
-    }
-  }, [shouldFocus]);
 
   if (glyph) {
     if (!isComponentGlyph(glyph)) {
@@ -133,13 +87,13 @@ export function InternalOption({
   const rightGlyph = hasGlyphs ? checkmark : undefined;
 
   return (
-    <InputOption
+    <DropdownItem
+      as="li"
       aria-label={typeof children === 'string' ? children : 'option'}
       {...rest}
       disabled={disabled}
       role="option"
       tabIndex={-1}
-      ref={ref}
       className={cx(
         OptionClassName,
         optionStyle,
@@ -168,26 +122,22 @@ export function InternalOption({
         className,
       )}
       onClick={onClick}
-      onFocus={onFocus}
       onKeyDown={undefined}
+      leftGlyph={leftGlyph}
+      rightGlyph={rightGlyph}
+      description={description}
     >
-      <InputOptionContent
-        leftGlyph={leftGlyph}
-        rightGlyph={rightGlyph}
-        description={description}
+      <span
+        className={cx(optionTextStyle, {
+          // FIXME: temps styles since we're not passing the `selected` prop to InputOption
+          [css`
+            font-weight: ${fontWeights.bold};
+          `]: selected,
+        })}
       >
-        <span
-          className={cx(optionTextStyle, {
-            // FIXME: temps styles since we're not passing the `selected` prop to InputOption
-            [css`
-              font-weight: ${fontWeights.bold};
-            `]: selected,
-          })}
-        >
-          {children}
-        </span>
-      </InputOptionContent>
-    </InputOption>
+        {children}
+      </span>
+    </DropdownItem>
   );
 }
 

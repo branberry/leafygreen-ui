@@ -39,6 +39,7 @@ export const Dropdown = React.forwardRef(
       darkMode: darkModeProp,
       highlightBehavior = HighlightBehavior.Focus,
       justify = Justify.End,
+      maxHeight,
       maxWidth,
       open,
       portalClassName,
@@ -189,6 +190,7 @@ export const Dropdown = React.forwardRef(
                       menuListStyle,
                       css`
                         max-width: ${maxWidth}px;
+                        max-height: ${maxHeight}px;
                       `,
                       className,
                     )}
