@@ -25,7 +25,7 @@ export const SearchResultGroup = ({
 
   return (
     <div>
-      {/* @ts-expect-error */}
+      {/* @ts-expect-error li/div incongruency */}
       <InputOption
         aria-label={label}
         isInteractive={false}
