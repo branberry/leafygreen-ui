@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { cx } from '@leafygreen-ui/emotion';
 import { useDarkMode } from '@leafygreen-ui/leafygreen-provider';
 
-import { badgeVariants, baseStyle } from './styles';
+import { badgeVariants, baseStyle, truncate } from './styles';
 import { BadgeProps, Variant } from './types';
 
 /**
@@ -23,7 +23,7 @@ function Badge({
       {...rest}
       className={cx(baseStyle, badgeVariants[theme][variant], className)}
     >
-      {children}
+      <span className={truncate}>{children}</span>
     </div>
   );
 }

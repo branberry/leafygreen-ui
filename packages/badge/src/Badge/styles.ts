@@ -19,6 +19,18 @@ export const baseStyle = css`
   text-transform: uppercase;
   border: 1px solid;
   letter-spacing: 0.4px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const truncate = css`
+  max-width: 100%;
+  display: inline-block
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 export const badgeVariants: Record<Theme, Record<Variant, string>> = {
