@@ -1,7 +1,12 @@
 import { css } from '@leafygreen-ui/emotion';
 import { Theme } from '@leafygreen-ui/lib';
-import { palette } from '@leafygreen-ui/palette';
-import { BaseFontSize, Size, spacing, typeScales } from '@leafygreen-ui/tokens';
+import {
+  BaseFontSize,
+  color,
+  Size,
+  spacing,
+  typeScales,
+} from '@leafygreen-ui/tokens';
 
 export const getFontSize = ({
   baseFontSize,
@@ -50,18 +55,18 @@ export const stateFeedbackContainerStyle = css`
 
 export const errorIconStyles: Record<Theme, string> = {
   [Theme.Light]: css`
-    color: ${palette.red.base};
+    color: ${color.light.icon.error.default};
   `,
   [Theme.Dark]: css`
-    color: ${palette.red.light1};
+    color: ${color.dark.icon.error.default};
   `,
 };
 
 export const validIconStyles: Record<Theme, string> = {
   [Theme.Light]: css`
-    color: ${palette.green.dark1};
+    color: ${color.light.icon.success.default};
   `,
   [Theme.Dark]: css`
-    color: ${palette.green.base};
+    color: ${color.dark.icon.success.default};
   `,
 };

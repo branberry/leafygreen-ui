@@ -2,6 +2,7 @@ import { css, cx } from '@leafygreen-ui/emotion';
 import { createUniqueClassName, Theme } from '@leafygreen-ui/lib';
 import { palette } from '@leafygreen-ui/palette';
 import {
+  color,
   focusRing,
   fontFamilies,
   fontWeights,
@@ -55,9 +56,9 @@ export const inputWrapperBaseStyles = css`
 
 export const inputWrapperModeStyles: Record<Theme, string> = {
   [Theme.Light]: css`
-    color: ${palette.black};
-    background: ${palette.white};
-    border: 1px solid ${palette.gray.base};
+    color: ${color.light.text.primary.default};
+    background: ${color.light.background.primary.default};
+    border: 1px solid ${color.light.border.primary.default};
 
     &:hover,
     &:active {
@@ -68,10 +69,11 @@ export const inputWrapperModeStyles: Record<Theme, string> = {
 
     & .${inputElementClassName} {
       &:-webkit-autofill {
-        color: ${palette.black};
-        background: ${palette.white};
-        border: 1px solid ${palette.gray.base};
-        -webkit-text-fill-color: ${palette.black};
+        color: ${color.light.text.primary.default};
+        background: ${color.light.background.primary.default};
+        border: 1px solid ${color.light.border.primary.default};
+
+        -webkit-text-fill-color: ${color.light.text.primary.default};
         box-shadow: ${autofillShadowOverride(palette.white)};
 
         &:focus {
@@ -94,8 +96,8 @@ export const inputWrapperModeStyles: Record<Theme, string> = {
   `,
   [Theme.Dark]: css`
     color: ${palette.gray.light3};
-    background-color: ${palette.gray.dark4};
-    border: 1px solid ${palette.gray.base};
+    background-color: ${color.dark.background.secondary.default};
+    border: 1px solid ${color.dark.border.primary.default};
 
     &:hover,
     &:active {
@@ -106,16 +108,16 @@ export const inputWrapperModeStyles: Record<Theme, string> = {
 
     & .${inputElementClassName} {
       &:-webkit-autofill {
-        border: 1px solid ${palette.gray.base};
+        border: 1px solid ${color.dark.border.primary.default};
         color: ${palette.gray.light3};
-        background: ${palette.gray.dark4};
+        background: ${color.dark.background.secondary.default};
         -webkit-text-fill-color: ${palette.gray.light3};
         box-shadow: ${autofillShadowOverride(palette.gray.dark4)};
 
         &:focus {
           box-shadow: ${autofillShadowOverride(palette.gray.dark4)},
             ${focusRing.dark.input};
-          border-color: ${palette.blue.light1};
+          border-color: ${color.dark.border.primary.focus};
         }
 
         &:hover:not(:focus) {
@@ -125,7 +127,8 @@ export const inputWrapperModeStyles: Record<Theme, string> = {
       }
 
       &::placeholder {
-        color: ${palette.gray.dark1};
+        color: ${palette.gray
+          .dark1}; // note this is the same color as our disabled token, probably a mistake?
         font-weight: ${fontWeights.regular};
       }
     }
@@ -206,7 +209,7 @@ export const inputWrapperStateStyles: Record<
 > = {
   [FormFieldState.Error]: {
     [Theme.Light]: css`
-      border-color: ${palette.red.base};
+      border-color: ${color.light.border.error.default};
 
       &:hover,
       &:active {
@@ -216,7 +219,7 @@ export const inputWrapperStateStyles: Record<
       }
     `,
     [Theme.Dark]: css`
-      border-color: ${palette.red.light1};
+      border-color: ${color.dark.border.error.default};
 
       &:hover,
       &:active {
@@ -232,7 +235,7 @@ export const inputWrapperStateStyles: Record<
   },
   [FormFieldState.Valid]: {
     [Theme.Light]: css`
-      border-color: ${palette.green.dark1};
+      border-color: ${color.light.border.success.default};
 
       &:hover,
       &:active {
@@ -242,7 +245,7 @@ export const inputWrapperStateStyles: Record<
       }
     `,
     [Theme.Dark]: css`
-      border-color: ${palette.green.dark1};
+      border-color: ${color.dark.border.success.default};
 
       &:hover,
       &:active {
@@ -257,8 +260,8 @@ export const inputWrapperStateStyles: Record<
 export const inputWrapperDisabledStyles: Record<Theme, string> = {
   [Theme.Light]: css`
     cursor: not-allowed;
-    background-color: ${palette.gray.light2};
-    border-color: ${palette.gray.light1};
+    background-color: ${color.light.background.disabled.default};
+    border-color: ${color.light.border.disabled.default};
 
     &:hover,
     &:active {
@@ -270,7 +273,7 @@ export const inputWrapperDisabledStyles: Record<Theme, string> = {
     & .${inputElementClassName} {
       cursor: not-allowed;
       pointer-events: none;
-      color: ${palette.gray.base};
+      color: ${color.light.text.disabled.default};
 
       &::placeholder {
         color: inherit;
@@ -281,8 +284,8 @@ export const inputWrapperDisabledStyles: Record<Theme, string> = {
         &:hover,
         &:focus {
           appearance: none;
-          border: 1px solid ${palette.gray.base};
-          -webkit-text-fill-color: ${palette.gray.base};
+          border: 1px solid ${color.light.border.primary.default};
+          color: ${color.light.text.disabled.default};
           box-shadow: ${autofillShadowOverride(palette.gray.light2)};
         }
 
@@ -296,7 +299,7 @@ export const inputWrapperDisabledStyles: Record<Theme, string> = {
     cursor: not-allowed;
     color: ${palette.gray.dark2};
     background-color: ${palette.gray.dark3};
-    border-color: ${palette.gray.dark2};
+    border-color: ${color.dark.border.disabled.default};
 
     &:hover,
     &:active {
@@ -316,7 +319,7 @@ export const inputWrapperDisabledStyles: Record<Theme, string> = {
         &:focus {
           appearance: none;
           border: 1px solid ${palette.gray.dark1};
-          -webkit-text-fill-color: ${palette.gray.dark1};
+          -webkit-text-fill-color: ${color.dark.text.disabled.focus};
           box-shadow: ${autofillShadowOverride(palette.gray.dark2)};
         }
 
@@ -376,10 +379,10 @@ export const iconDisabledStyles: Record<Theme, string> = {
 
 export const iconStyles: Record<Theme, string> = {
   [Theme.Light]: css`
-    color: ${palette.gray.base};
+    color: ${color.light.icon.secondary.default};
   `,
   [Theme.Dark]: css`
-    color: ${palette.gray.base};
+    color: ${color.dark.icon.secondary.default};
   `,
 };
 
@@ -397,7 +400,7 @@ export const optionalTextBaseStyle = css`
 
 export const optionalTextThemeStyle: Record<Theme, string> = {
   [Theme.Light]: css`
-    color: ${palette.gray.dark1};
+    color: ${color.light.text.secondary.default};
   `,
   [Theme.Dark]: css`
     color: ${palette.gray.base};
