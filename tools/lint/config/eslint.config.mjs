@@ -10,7 +10,6 @@ import { FlatCompat } from '@eslint/eslintrc';
 
 const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
 });
 
 export default [
@@ -20,14 +19,23 @@ export default [
       'plugin:react/recommended',
       'plugin:react-hooks/recommended',
       'plugin:jest/recommended',
-      'prettier',
       'plugin:jsx-a11y/recommended',
       'plugin:storybook/recommended',
     ),
   ),
-  //   {
-  //     ignores: ['../src/eslint.ts', 'src/eslint.ts'],
-  //   },
+  {
+    ignores: [
+      '**/dist/**/*',
+      '**/bin/**/*',
+      'storybook-static/**/*',
+      '**/stories.js*',
+      '.turbo',
+      'tools/**/config/**/*',
+      'packages/icon/src/glyphs/*.svg',
+      'packages/icon/src/generated/*.tsx',
+      'prettier.config.js',
+    ],
+  },
   {
     plugins: {
       '@emotion': emotion,
